@@ -472,9 +472,9 @@ function initPreviews() {
 
 function generateMap() {
   if (isMainGame) {
-    const possibleSizes = [15, 20, 30];
+    const possibleSizes = [15, 20, 25];
     mapSize = possibleSizes[Math.floor(Math.random() * possibleSizes.length)];
-    targetKeys = Math.floor(mapSize / 7) + 2;
+    targetKeys = Math.floor(mapSize / 6) + 1;
   } else {
     mapSize = 25;
     targetKeys = 1;
@@ -492,12 +492,25 @@ function generateMap() {
     for(let c=0; c<mapSize; c++) {
       if(r===0 || r===mapSize-1 || c===0 || c===mapSize-1) {
         row.push(1);
-      } else if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25) {
-        row.push(1);
+      } else if (isMainGame) {
+        // 본 게임: 무작위 장애물 배치로 완전히 다른 방 구조 생성
+        if(Math.random() < 0.14 && !(r === Math.floor(mapSize/2) && c === Math.floor(mapSize/2))) {
+          row.push(1);
+        } else {
+          row.push(0);
+          if(!(r === mapSize-2 && c === mapSize-2)) {
+            freeTiles.push({r, c});
+          }
+        }
       } else {
-        row.push(0);
-        if(r > 2 && c > 2 && !(r === mapSize-2 && c === mapSize-2)) {
-          freeTiles.push({r, c});
+        // 튜토리얼: 규칙적인 기둥 격자 구조
+        if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25) {
+          row.push(1);
+        } else {
+          row.push(0);
+          if(r > 2 && c > 2 && !(r === mapSize-2 && c === mapSize-2)) {
+            freeTiles.push({r, c});
+          }
         }
       }
     }
@@ -518,10 +531,10 @@ function generateMap() {
   }
 
   let cabPositions = isMainGame ? [
-    {r:2,c:2}, {r:3,c:mapSize-3}, {r:mapSize-3,c:3}, {r:mapSize-3,c:mapSize-3}, 
+    {r:2, c:2}, {r:2, c:mapSize-3}, {r:mapSize-3, c:2}, {r:mapSize-3, c:mapSize-3}, 
     {r:Math.floor(mapSize/2), c:Math.floor(mapSize/2)}
   ] : [
-    {r:3,c:3}, {r:8,c:12}, {r:12,c:8}, {r:18,c:18}
+    {r:3, c:3}, {r:8, c:12}, {r:12, c:8}, {r:18, c:18}
   ];
 
   cabPositions.forEach(p => {
@@ -616,9 +629,9 @@ function startGame(type) {
 function startMainGame() {
   isMainGame = true;
   document.getElementById('stageTitle').textContent = "🔥 [본 게임 스테이지]";
-  document.getElementById('stageDesc').textContent = "랜덤 크기(15x15, 20x20, 30x30)의 방! 테두리 나무 문과 괴물을 피하세요!";
+  document.getElementById('stageDesc').textContent = "무작위 방 구조와 크기! 나무 문을 열고 새로운 방으로 진입하세요!";
   document.getElementById('stageGoals').innerHTML = `
-    <li><b>랜덤 방 크기:</b> 진입 시 15×15, 20×20, 30×30 중 하나의 방이 생성됩니다.</li>
+    <li><b>무작위 방 구조:</b> 나무 문을 통과할 때마다 완전히 새로운 방 구조와 크기가 생성됩니다.</li>
     <li><b>나무 문:</b> 맵 네 변 테두리의 정중앙에 위치하며, 벽을 뚫고 설치되어 있습니다.</li>
     <li><b>목표:</b> 숨겨진 <b>열쇠(${targetKeys}개)</b>를 모두 수집하세요!</li>
     <li><b>탈출:</b> 열쇠를 모은 뒤 EXIT 문을 통해 최종 탈출하세요.</li>
