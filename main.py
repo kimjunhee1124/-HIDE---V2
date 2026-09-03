@@ -75,7 +75,6 @@ body{
   box-shadow:inset 2px 2px 0 #52be80;
 }
 
-/* 본 게임 전용 나무 문 스타일 */
 .wood-door{
   background:#8d5524; border:3px solid #5c3a21; text-align:center; 
   line-height:34px; font-weight:bold; color:#f4d03f; font-size:9px;
@@ -473,12 +472,10 @@ function initPreviews() {
 
 function generateMap() {
   if (isMainGame) {
-    // 본 게임: 15x15, 20x20, 30x30 중 하나를 랜덤 선택
     const possibleSizes = [15, 20, 30];
     mapSize = possibleSizes[Math.floor(Math.random() * possibleSizes.length)];
-    targetKeys = Math.floor(mapSize / 7) + 2; // 크기에 따른 열쇠 개수 조절
+    targetKeys = Math.floor(mapSize / 7) + 2;
   } else {
-    // 튜토리얼은 기존 규칙 완벽 보존
     mapSize = 25;
     targetKeys = 1;
   }
@@ -494,7 +491,7 @@ function generateMap() {
     let row = [];
     for(let c=0; c<mapSize; c++) {
       if(r===0 || r===mapSize-1 || c===0 || c===mapSize-1) {
-        row.push(1); // 테두리 벽 기본 생성
+        row.push(1);
       } else if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25) {
         row.push(1);
       } else {
@@ -507,16 +504,13 @@ function generateMap() {
     mapData.push(row);
   }
   
-  // 튜토리얼 시작 지점 보정
   if (!isMainGame) {
     mapData[1][1] = 0; mapData[1][2] = 0;
     mapData[2][1] = 0; mapData[2][2] = 0;
   }
 
-  // 본 게임인 경우: 4개 변(테두리)의 정중앙에 벽을 뚫고 나무 문(종류 코드: 5) 설치
   if (isMainGame) {
     const mid = Math.floor(mapSize / 2);
-    // 윗쪽 변 중앙, 아래쪽 변 중앙, 왼쪽 변 중앙, 오른쪽 변 중앙의 벽(1)을 나무 문(5)으로 대체
     mapData[0][mid] = 5;
     mapData[mapSize - 1][mid] = 5;
     mapData[mid][0] = 5;
@@ -544,7 +538,6 @@ function generateMap() {
     }
   }
 
-  // 출구 설정
   mapData[mapSize-2][mapSize-2] = 4;
 }
 
@@ -623,7 +616,7 @@ function startGame(type) {
 function startMainGame() {
   isMainGame = true;
   document.getElementById('stageTitle').textContent = "🔥 [본 게임 스테이지]";
-  document.getElementById('stageDesc').textContent = "랜덤 크기(15x15, 20x20, 30x30)의 방! 테두리 나무 문과 괴물을 피해 탈출하세요!";
+  document.getElementById('stageDesc').textContent = "랜덤 크기(15x15, 20x20, 30x30)의 방! 테두리 나무 문과 괴물을 피하세요!";
   document.getElementById('stageGoals').innerHTML = `
     <li><b>랜덤 방 크기:</b> 진입 시 15×15, 20×20, 30×30 중 하나의 방이 생성됩니다.</li>
     <li><b>나무 문:</b> 맵 네 변 테두리의 정중앙에 위치하며, 벽을 뚫고 설치되어 있습니다.</li>
@@ -807,7 +800,6 @@ function handleInteraction() {
     }
   }
   else if(tileType === 5) {
-    // 나무 문 상호작용: 새로운 크기(15x15, 20x20, 30x30 중 하나)의 방으로 리프레시 이동
     playLockerSound();
     resetGameState();
     pickMonsterNewTarget();
@@ -994,7 +986,7 @@ function win() {
   stopChaseBGM();
   stopAmbientBGM();
   document.getElementById('world').classList.add('hidden');
-  document.getElementById('winScreen').classList.add('hidden');
+  document.getElementById('winScreen').classList.remove('hidden');
   
   if (!isMainGame) {
     document.getElementById('winTitle').textContent = "🎓 튜토리얼 클리어!";
