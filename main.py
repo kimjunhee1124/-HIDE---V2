@@ -202,16 +202,16 @@ body{
         <h2 id="stageTitle">📢 [튜토리얼 스테이지]</h2>
         <p style="color:#f1c40f; font-weight:bold;" id="stageDesc">본 게임에 진입하기 전, 기본 조작과 은신 방법을 익히세요!</p>
         <ul id="stageGoals">
-          <li><b>목표:</b> 랜덤 위치의 열쇠(🔑 1개)를 찾으세요.</li>
+          <li><b>목표:</b> 열쇠(🔑 1개)를 찾으세요.</li>
           <li><b>은신 연습:</b> 괴물이 다가오면 캐비닛에 숨어 QTE 미션을 수행하세요.</li>
-          <li><b>입장:</b> 열쇠로 우측 하단의 START 문을 열어 본 게임으로 향하세요.</li>
+          <li><b>입장:</b> 열쇠로 START 문을 열어 본 게임으로 향하세요.</li>
         </ul>
         <button class="bigbtn" style="background:#2980b9; border-color:#3498db;" onclick="closeTutorial()">이해했습니다 (시작)</button>
       </div>
     </div>
 
     <div id="hud">
-      <div class="panel">🔑 열쇠: <span id="keyCount">0</span>/<span id="targetKeyCount">1</span></div>
+      <div class="panel">🔑 열쇠: <span id="keyCount">0</span>/5</div>
       <div class="panel">상태: <span id="mission" style="color:#f1c40f;">[튜토리얼] 열쇠를 찾으세요!</span></div>
       <div class="panel" style="color:#aaa;">조작: WASD(이동) / E(상호작용)</div>
     </div>
@@ -224,7 +224,7 @@ body{
       <p id="hideSub" style="color:#bdc3c7; margin:0 0 10px 0; text-shadow:1px 1px #000;">게이지가 다 떨어지기 전에 표시되는 키를 누르세요!</p>
       
       <div style="font-size:18px; color:#e74c3c; font-weight:bold; margin-bottom:8px;">
-        ❤️ 숨참기 기회 (실패 실수): <span id="qteHp" style="color:#fff; font-size:22px;">3</span> / 3
+        ❤️ 숨참기 기회: <span id="qteHp" style="color:#fff; font-size:22px;">3</span> / 3
       </div>
 
       <div id="gaugeContainer">
@@ -277,17 +277,13 @@ function playLockerSound() {
     initAudio();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(150, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
-
     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-
     osc.start();
     osc.stop(audioCtx.currentTime + 0.15);
   } catch(e) {}
@@ -296,29 +292,22 @@ function playLockerSound() {
 function startAmbientBGM() {
   if (ambientBgmInterval || chaseBgmInterval) return;
   initAudio();
-
   ambientBgmInterval = setInterval(() => {
     if (!audioCtx || audioCtx.state !== 'running') return;
-    
     try {
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-
       const ambientChords = [130.81, 164.81, 196.00, 220.00];
       osc.type = 'sine';
       osc.frequency.setValueAtTime(ambientChords[ambientStep % ambientChords.length], now);
-
       gain.gain.setValueAtTime(0.001, now);
       gain.gain.linearRampToValueAtTime(0.06, now + 1.0);
       gain.gain.linearRampToValueAtTime(0.001, now + 3.5);
-
       osc.connect(gain);
       gain.connect(audioCtx.destination);
-
       osc.start(now);
       osc.stop(now + 3.6);
-
       ambientStep++;
     } catch(e) {}
   }, 4000);
@@ -335,42 +324,22 @@ function startChaseBGM() {
   if (chaseBgmInterval) return;
   stopAmbientBGM();
   initAudio();
-  
   bgmStep = 0;
   chaseBgmInterval = setInterval(() => {
     if (!audioCtx || audioCtx.state !== 'running') return;
-    
     try {
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      
       const freqs = [82.41, 110.0, 77.78, 116.54];
       osc.type = (bgmStep % 2 === 0) ? 'sawtooth' : 'square';
       osc.frequency.setValueAtTime(freqs[bgmStep % freqs.length], now);
-      
       gain.gain.setValueAtTime(0.18, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      
       osc.connect(gain);
       gain.connect(audioCtx.destination);
-      
       osc.start(now);
       osc.stop(now + 0.25);
-      
-      if (bgmStep % 2 === 1) {
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(330, now + 0.1);
-        gain2.gain.setValueAtTime(0.1, now + 0.1);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.start(now + 0.1);
-        osc2.stop(now + 0.2);
-      }
-      
       bgmStep++;
     } catch(e) {}
   }, 300);
@@ -394,15 +363,9 @@ const maleSVG = `
   <rect x="4" y="5" width="8" height="5" fill="#f3d2b3"/>
   <rect x="5" y="7" width="2" height="2" fill="#111"/>
   <rect x="9" y="7" width="2" height="2" fill="#111"/>
-  <rect x="6" y="7" width="1" height="1" fill="#fff"/>
-  <rect x="10" y="7" width="1" height="1" fill="#fff"/>
   <rect x="3" y="10" width="10" height="5" fill="#2980b9"/>
-  <rect x="7" y="10" width="2" height="3" fill="#fff"/>
-  <rect x="7" y="12" width="2" height="2" fill="#c0392b"/>
   <rect x="4" y="15" width="3" height="4" fill="#34495e"/>
   <rect x="9" y="15" width="3" height="4" fill="#34495e"/>
-  <rect x="3" y="18" width="4" height="2" fill="#111"/>
-  <rect x="9" y="18" width="4" height="2" fill="#111"/>
 </svg>`;
 
 const femaleSVG = `
@@ -412,17 +375,8 @@ const femaleSVG = `
   <rect x="4" y="5" width="8" height="5" fill="#f3d2b3"/>
   <rect x="5" y="7" width="2" height="2" fill="#111"/>
   <rect x="9" y="7" width="2" height="2" fill="#111"/>
-  <rect x="6" y="7" width="1" height="1" fill="#fff"/>
-  <rect x="10" y="7" width="1" height="1" fill="#fff"/>
-  <rect x="4" y="8" width="1" height="1" fill="#e84393"/>
-  <rect x="11" y="8" width="1" height="1" fill="#e84393"/>
   <rect x="3" y="10" width="10" height="4" fill="#2980b9"/>
-  <rect x="7" y="10" width="2" height="2" fill="#fff"/>
   <rect x="3" y="14" width="10" height="3" fill="#c0392b"/>
-  <rect x="5" y="17" width="2" height="2" fill="#f3d2b3"/>
-  <rect x="9" y="17" width="2" height="2" fill="#f3d2b3"/>
-  <rect x="4" y="18" width="3" height="2" fill="#111"/>
-  <rect x="9" y="18" width="3" height="2" fill="#111"/>
 </svg>`;
 
 const monsterSVG = `
@@ -431,18 +385,11 @@ const monsterSVG = `
   <rect x="2" y="5" width="12" height="10" fill="#2c3e50"/>
   <rect x="4" y="6" width="3" height="3" fill="#e74c3c"/>
   <rect x="9" y="6" width="3" height="3" fill="#e74c3c"/>
-  <rect x="5" y="7" width="1" height="1" fill="#fff"/>
-  <rect x="10" y="7" width="1" height="1" fill="#fff"/>
-  <rect x="5" y="11" width="6" height="2" fill="#000"/>
-  <rect x="6" y="11" width="1" height="1" fill="#fff"/>
-  <rect x="9" y="11" width="1" height="1" fill="#fff"/>
-  <rect x="3" y="17" width="3" height="3" fill="#111"/>
-  <rect x="10" y="17" width="3" height="3" fill="#111"/>
 </svg>`;
 
 const keySVG = `
 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" class="key-icon">
-  <path d="M6 2 C3.8 2 2 3.8 2 6 C2 8.2 3.8 10 6 10 C7 10 7.9 9.6 8.5 9 L11 11.5 L11 13 L13 13 L13 11 L14 11 L14 9 L11.5 6.5 C11.9 5.9 12 5 12 4 C12 2 10 2 6 2 Z M6 4 C7.1 4 8 4.9 8 6 C8 7.1 7.1 8 6 8 C4.9 8 4 7.1 4 6 C4 4.9 4.9 4 6 4 Z" fill="#f1c40f"/>
+  <path d="M6 2 C3.8 2 2 3.8 2 6 C2 8.2 3.8 10 6 10 C7 10 7.9 9.6 8.5 9 L11 11.5 L11 13 L13 13 L13 11 L14 11 L14 9 L11.5 6.5 C11.9 5.9 12 5 12 4 C12 2 10 2 6 2 Z" fill="#f1c40f"/>
 </svg>`;
 
 let mapData = [];
@@ -450,8 +397,9 @@ let selectedGender = 'male';
 let isMainGame = false;
 
 let px = 100, py = 100;
-let mx = 11 * TILE_SIZE + 20, my = 11 * TILE_SIZE + 20;
-let qteHp = 3, keyCount = 0, targetKeys = 1;
+let mx = 800, my = 800;
+let qteHp = 3, keyCount = 0;
+let targetKeys = 5;
 let isHidden = false, isChased = false, isQTEActive = false, gameEnded = false;
 let isPaused = true;
 let keysPressed = {};
@@ -461,7 +409,10 @@ let targetKey = 'W';
 let hideTimer = 6.0;
 let requiredPresses = 5;
 
-let mTargetX = 11 * TILE_SIZE + 20, mTargetY = 11 * TILE_SIZE + 20;
+let mTargetX = 500, mTargetY = 500;
+
+// 고정된 탈출구 방(마지막 방) 여부 체크 (본 게임에서 단 1개의 방에만 탈출구 존재)
+let hasExitDoor = false;
 
 function initPreviews() {
   const mPrev = document.getElementById('mPrev');
@@ -471,15 +422,7 @@ function initPreviews() {
 }
 
 function generateMap() {
-  if (isMainGame) {
-    const possibleSizes = [15, 20, 25];
-    mapSize = possibleSizes[Math.floor(Math.random() * possibleSizes.length)];
-    targetKeys = Math.floor(mapSize / 6) + 1;
-  } else {
-    mapSize = 25;
-    targetKeys = 1;
-  }
-  
+  mapSize = 25;
   const mapContainer = document.getElementById('map-container');
   mapContainer.style.width = (mapSize * TILE_SIZE) + 'px';
   mapContainer.style.height = (mapSize * TILE_SIZE) + 'px';
@@ -493,13 +436,12 @@ function generateMap() {
       if(r===0 || r===mapSize-1 || c===0 || c===mapSize-1) {
         row.push(1);
       } else {
-        // 본 게임과 튜토리얼 모두 동일한 튜토리얼 스타일의 규칙적인 기둥 격자 구조 적용
         const mid = Math.floor(mapSize / 2);
         if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25 && !(r === mid && c === mid)) {
           row.push(1);
         } else {
           row.push(0);
-          if(r > 2 && c > 2 && !(r === mapSize-2 && c === mapSize-2)) {
+          if(r > 2 && c > 2) {
             freeTiles.push({r, c});
           }
         }
@@ -508,40 +450,54 @@ function generateMap() {
     mapData.push(row);
   }
   
-  // 시작 좌측 상단 영역 비우기
+  // 시작 위치 비우기
   mapData[1][1] = 0; mapData[1][2] = 0;
   mapData[2][1] = 0; mapData[2][2] = 0;
 
+  // 본 게임이고 열쇠가 아직 부족하며, 확률적으로 현재 방에 열쇠 생성 (최대 1개)
+  // 단, 열쇠 5개를 다 모았다면 절대 생성되지 않음
   if (isMainGame) {
     const mid = Math.floor(mapSize / 2);
+    // 4방향 나무 문 설치
     mapData[0][mid] = 5;
     mapData[mapSize - 1][mid] = 5;
     mapData[mid][0] = 5;
     mapData[mid][mapSize - 1] = 5;
-  }
 
-  let cabPositions = isMainGame ? [
-    {r:2, c:2}, {r:2, c:mapSize-3}, {r:mapSize-3, c:2}, {r:mapSize-3, c:mapSize-3}, 
-    {r:Math.floor(mapSize/2), c:Math.floor(mapSize/2)}
-  ] : [
-    {r:3, c:3}, {r:8, c:12}, {r:12, c:8}, {r:18, c:18}
-  ];
-
-  cabPositions.forEach(p => {
-    if(p.r > 0 && p.r < mapSize-1 && p.c > 0 && p.c < mapSize-1) {
-      mapData[p.r][p.c] = 2;
+    // 탈출구 문은 게임당 딱 하나의 방에만 랜덤 지정 (예: 20% 확률 혹은 랜덤으로 진입 시 결정, 여기서는 방 진입할 때마다 무작위 결정하되 이미 5개 모았을 때 활성화)
+    // 사용자 요청: "탈출구가 있는 방이 딱 하나고 탈출구 위치도 직접 방을 오가며 찾아야 해"
+    hasExitDoor = (Math.random() < 0.25); // 방마다 25% 확률로 탈출구 등장
+    if (hasExitDoor) {
+      mapData[mapSize-2][mapSize-2] = 4; // EXIT 문 설치
     }
-  });
 
-  for(let i=0; i<targetKeys; i++) {
+    // 방별 열쇠 스폰 (5개 미만일 때만, 방마다 50% 확률로 1개 존재)
+    if (keyCount < targetKeys && Math.random() < 0.6) {
+      if(freeTiles.length > 0) {
+        let randomIndex = Math.floor(Math.random() * freeTiles.length);
+        let keyPos = freeTiles.splice(randomIndex, 1)[0];
+        mapData[keyPos.r][keyPos.c] = 3;
+      }
+    }
+  } else {
+    // 튜토리얼 스테이지
+    mapData[mapSize-2][mapSize-2] = 4; // START 문
     if(freeTiles.length > 0) {
-      let randomIndex = Math.floor(Math.random() * freeTiles.length);
-      let keyPos = freeTiles.splice(randomIndex, 1)[0];
+      let keyPos = freeTiles[Math.floor(Math.random() * freeTiles.length)];
       mapData[keyPos.r][keyPos.c] = 3;
     }
   }
 
-  mapData[mapSize-2][mapSize-2] = 4;
+  // 캐비닛 배치
+  let cabPositions = [
+    {r:3, c:3}, {r:3, c:mapSize-4}, {r:mapSize-4, c:3}, {r:mapSize-4, c:mapSize-4}, 
+    {r:Math.floor(mapSize/2), c:Math.floor(mapSize/2)}
+  ];
+  cabPositions.forEach(p => {
+    if(p.r > 0 && p.r < mapSize-1 && p.c > 0 && p.c < mapSize-1 && mapData[p.r][p.c] === 0) {
+      mapData[p.r][p.c] = 2;
+    }
+  });
 }
 
 function renderMap() {
@@ -568,14 +524,18 @@ function renderMap() {
   container.innerHTML = html;
 }
 
-function resetGameState() {
-  // 본 게임 및 튜토리얼 모두 좌측 상단 안전한 위치에서 스폰
+function resetGameState(keepKeys = false) {
   px = 100; py = 100;
   
-  mx = (mapSize - 3) * TILE_SIZE + 20; 
-  my = (mapSize - 3) * TILE_SIZE + 20;
+  // 괴물을 맵 내부 안전한 곳에 스폰 (플레이어와 멀리 떨어진 우측 하단)
+  mx = (mapSize - 4) * TILE_SIZE + 20; 
+  my = (mapSize - 4) * TILE_SIZE + 20;
   
-  qteHp = 3; keyCount = 0;
+  if(!keepKeys) {
+    keyCount = 0;
+  }
+  
+  qteHp = 3;
   isHidden = false; isChased = false; isQTEActive = false; gameEnded = false;
   stealthTimer = 0;
   keysPressed = {};
@@ -585,7 +545,6 @@ function resetGameState() {
   generateMap();
 
   document.getElementById('keyCount').textContent = keyCount;
-  document.getElementById('targetKeyCount').textContent = targetKeys;
   document.getElementById('qteHp').textContent = qteHp;
   document.getElementById('alert').style.display = 'none';
   document.getElementById('hideUI').classList.add('hidden');
@@ -593,6 +552,7 @@ function resetGameState() {
   document.getElementById('winScreen').classList.add('hidden');
   
   renderMap();
+  pickMonsterNewTarget();
 }
 
 function startGame(type) {
@@ -605,8 +565,7 @@ function startGame(type) {
   document.getElementById('player').innerHTML = selectedGender === 'male' ? maleSVG : femaleSVG;
   document.getElementById('monster').innerHTML = monsterSVG;
   
-  resetGameState();
-  pickMonsterNewTarget();
+  resetGameState(false);
   
   isPaused = true;
   document.getElementById('tutorialNotice').classList.remove('hidden');
@@ -618,19 +577,17 @@ function startGame(type) {
 function startMainGame() {
   isMainGame = true;
   document.getElementById('stageTitle').textContent = "🔥 [본 게임 스테이지]";
-  document.getElementById('stageDesc').textContent = "무작위 방 구조와 크기! 나무 문을 열고 새로운 방으로 진입하세요!";
+  document.getElementById('stageDesc').textContent = "방을 오가며 열쇠를 찾고 탈출하세요!";
   document.getElementById('stageGoals').innerHTML = `
-    <li><b>기둥 격자 방 구조:</b> 튜토리얼과 동일한 깔끔한 기둥 구조로 방이 생성됩니다.</li>
-    <li><b>나무 문:</b> 맵 네 변 테두리의 정중앙에 위치하며, 벽을 뚫고 설치되어 있습니다.</li>
-    <li><b>목표:</b> 숨겨진 <b>열쇠(${targetKeys}개)</b>를 모두 수집하세요!</li>
-    <li><b>탈출:</b> 열쇠를 모은 뒤 EXIT 문을 통해 최종 탈출하세요.</li>
+    <li><b>방 탐험:</b> 나무 문을 통과해 다른 방으로 이동하며 <b>열쇠(총 5개)</b>를 수집하세요. (방마다 최대 1개)</li>
+    <li><b>탈출구 찾기:</b> 여러 방 중 단 한 곳에만 존재하는 <b>EXIT 탈출구</b> 방을 찾아내야 합니다.</li>
+    <li><b>탈출 조건:</b> 열쇠 5개를 모두 모은 후 EXIT 문으로 탈출하세요!</li>
   `;
   
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('world').classList.remove('hidden');
   
-  resetGameState();
-  pickMonsterNewTarget();
+  resetGameState(false);
   
   isPaused = true;
   document.getElementById('tutorialNotice').classList.remove('hidden');
@@ -643,8 +600,7 @@ function restartGame() {
   document.getElementById('gameover').classList.add('hidden');
   document.getElementById('world').classList.remove('hidden');
   
-  resetGameState();
-  pickMonsterNewTarget();
+  resetGameState(false);
   isPaused = false;
   startAmbientBGM();
   
@@ -705,9 +661,11 @@ function isSolid(x, y) {
   return false;
 }
 
-function updatePlayer() {
-  let speed = 3.3;
+function updatePlayer(dt) {
+  let speed = 210; // 픽셀/초 단위 고정 속도 (프레임 드랍 영향 방지)
+  let moveDist = speed * dt;
   let dx = 0, dy = 0;
+  
   if(keysPressed['w'] || keysPressed['arrowup']) dy -= 1;
   if(keysPressed['s'] || keysPressed['arrowdown']) dy += 1;
   if(keysPressed['a'] || keysPressed['arrowleft']) dx -= 1;
@@ -715,8 +673,8 @@ function updatePlayer() {
 
   if(dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
 
-  let nx = px + dx * speed;
-  let ny = py + dy * speed;
+  let nx = px + dx * moveDist;
+  let ny = py + dy * moveDist;
 
   if(!isSolid(nx, py)) px = nx;
   if(!isSolid(px, ny)) py = ny;
@@ -732,14 +690,14 @@ function updatePlayer() {
   } else if(tileType === 3) {
     document.getElementById('mission').textContent = '[E] 키를 눌러 열쇠를 줍으세요!';
   } else if(tileType === 5) {
-    document.getElementById('mission').textContent = '[E] 키를 눌러 나무 문을 통과해 다른 방으로 이동하세요!';
+    document.getElementById('mission').textContent = '[E] 키를 눌러 다른 방으로 이동하세요!';
   } else if(tileType === 4) {
     if(keyCount >= targetKeys) document.getElementById('mission').textContent = isMainGame ? '[E] 학교 탈출 문 열기!' : '[E] 본 게임 이동!';
-    else document.getElementById('mission').textContent = `문이 잠겨 있습니다. (열쇠 ${keyCount}/${targetKeys})`;
+    else document.getElementById('mission').textContent = `문이 잠겨 있습니다. (열쇠 ${keyCount}/5)`;
   } else if(keyCount < targetKeys) {
-    document.getElementById('mission').textContent = `${prefix} 열쇠를 찾으세요! (${keyCount}/${targetKeys})`;
+    document.getElementById('mission').textContent = `${prefix} 다른 방을 탐색해 열쇠를 찾으세요! (${keyCount}/5)`;
   } else {
-    document.getElementById('mission').textContent = `${prefix} 탈출 문으로 이동하세요!`;
+    document.getElementById('mission').textContent = `${prefix} 탈출구(EXIT) 방을 찾아 탈출하세요!`;
   }
 }
 
@@ -757,7 +715,6 @@ function handleInteraction() {
 
   if(tileType === 2) {
     playLockerSound();
-    
     let monsterDist = Math.hypot(px - mx, py - my);
     
     if(isChased || monsterDist < 280) {
@@ -791,20 +748,21 @@ function handleInteraction() {
     }
   } 
   else if(tileType === 3) {
-    keyCount++;
-    mapData[pRow][pCol] = 0;
-    renderMap();
-    document.getElementById('keyCount').textContent = keyCount;
-    if(keyCount >= targetKeys) {
-      document.getElementById('mission').textContent = '모든 열쇠 획득! 출구 문으로 이동하세요!';
-    } else {
-      document.getElementById('mission').textContent = `열쇠 획득! (${keyCount}/${targetKeys})`;
+    if (keyCount < targetKeys) {
+      keyCount++;
+      mapData[pRow][pCol] = 0;
+      renderMap();
+      document.getElementById('keyCount').textContent = keyCount;
+      if(keyCount >= targetKeys) {
+        document.getElementById('mission').textContent = '열쇠 5개 모두 획득! 탈출구(EXIT) 방을 찾으세요!';
+      } else {
+        document.getElementById('mission').textContent = `열쇠 획득! (${keyCount}/5)`;
+      }
     }
   }
   else if(tileType === 5) {
     playLockerSound();
-    resetGameState();
-    pickMonsterNewTarget();
+    resetGameState(true); // 열쇠 개수는 유지한 채 새로운 방 생성
     document.getElementById('mission').textContent = '나무 문을 통해 새로운 방으로 이동했습니다!';
   }
   else if(tileType === 4) {
@@ -829,7 +787,7 @@ function pickMonsterNewTarget() {
   }
 }
 
-function updateMonster() {
+function updateMonster(dt) {
   if(isHidden && isQTEActive) {
     document.getElementById('alert').style.display = 'block';
     startChaseBGM();
@@ -844,28 +802,13 @@ function updateMonster() {
     document.getElementById('alert').style.display = 'block';
     startChaseBGM();
     
-    let speed = 2.9; 
+    let speed = 180 * dt; 
     let angle = Math.atan2(py - my, px - mx);
     let vx = Math.cos(angle) * speed;
     let vy = Math.sin(angle) * speed;
 
-    let movedX = false, movedY = false;
-
-    if(!isSolid(mx + vx, my)) {
-      mx += vx;
-      movedX = true;
-    }
-    if(!isSolid(mx, my + vy)) {
-      my += vy;
-      movedY = true;
-    }
-
-    if(!movedX && !movedY) {
-      if(!isSolid(mx + speed, my)) mx += speed;
-      else if(!isSolid(mx - speed, my)) mx -= speed;
-      else if(!isSolid(mx, my + speed)) my += speed;
-      else if(!isSolid(mx, my - speed)) my -= speed;
-    }
+    if(!isSolid(mx + vx, my)) mx += vx;
+    if(!isSolid(mx, my + vy)) my += vy;
 
     if(dist < 28) lose("괴물에게 붙잡혔습니다!");
   } 
@@ -881,7 +824,7 @@ function updateMonster() {
     if(tDist < 25) {
       pickMonsterNewTarget();
     } else {
-      let speed = 1.8;
+      let speed = 110 * dt;
       let angle = Math.atan2(mTargetY - my, mTargetX - mx);
       let vx = Math.cos(angle) * speed;
       let vy = Math.sin(angle) * speed;
@@ -940,7 +883,6 @@ function handleHideInput(k) {
 
 function updateHideLogic(dt) {
   if(!isQTEActive) return;
-  
   hideTimer -= dt;
   let percentage = Math.max(0, (hideTimer / maxHideTime) * 100);
   document.getElementById('gaugeBar').style.width = percentage + '%';
@@ -963,7 +905,7 @@ function exitCabinetQTESuccess() {
 
   document.getElementById('qteBox').classList.add('hidden');
   document.getElementById('safeBox').classList.remove('hidden');
-  document.getElementById('mission').textContent = '괴물이 당신을 놓치고 떠났습니다! 원하는 때에 [E] 키를 눌러 나가세요.';
+  document.getElementById('mission').textContent = '괴물이 당신을 놓쳤습니다! [E] 키를 눌러 나오세요.';
 }
 
 function exitCabinetSafe() {
@@ -992,13 +934,13 @@ function win() {
   
   if (!isMainGame) {
     document.getElementById('winTitle').textContent = "🎓 튜토리얼 클리어!";
-    document.getElementById('winDesc').textContent = "기본 생존 수칙을 모두 익혔습니다. 이제 본 게임으로 입장합니다...";
+    document.getElementById('winDesc').textContent = "기본 생존 수칙을 모두 익혔습니다. 본 게임으로 입장합니다...";
     const btn = document.getElementById('winBtn');
     btn.textContent = "본 게임 시작하기";
     btn.onclick = function() { startMainGame(); };
   } else {
     document.getElementById('winTitle').textContent = "🏆 게임 최종 클리어!";
-    document.getElementById('winDesc').textContent = "축하합니다! 방을 탐험하며 열쇠를 모아 무사히 탈출했습니다!";
+    document.getElementById('winDesc').textContent = "축하합니다! 방을 오가며 열쇠 5개를 모으고 탈출구 방을 찾아 무사히 탈출했습니다!";
     const btn = document.getElementById('winBtn');
     btn.textContent = "첫 화면으로 돌아가기";
     btn.onclick = function() { location.reload(); };
@@ -1009,18 +951,19 @@ let lastTime = performance.now();
 function gameLoop(now) {
   if(gameEnded) return;
   let dt = (now - lastTime) / 1000;
+  if(dt > 0.1) dt = 0.1; // 프레임 드랍 방어
   lastTime = now;
 
   if(!isPaused) {
     if(stealthTimer > 0) stealthTimer -= dt;
 
     if(!isHidden) {
-      updatePlayer();
+      updatePlayer(dt);
     } else if(isQTEActive) {
       updateHideLogic(dt);
     }
 
-    updateMonster();
+    updateMonster(dt);
     updateCamera();
     draw();
   }
