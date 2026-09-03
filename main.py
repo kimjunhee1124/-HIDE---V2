@@ -1,1002 +1,2464 @@
 import streamlit as st
-import random
-import time
-
-# ============================================================
-# 공포 게임 - main.py
-# Streamlit Single File Version
-# ============================================================
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="THE EMPTY HOUSE",
-    page_icon="👁️",
-    layout="centered",
+    page_icon="👁",
+    layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ============================================================
-# CSS
+# THE EMPTY HOUSE
+# Real-time WASD Horror Game
+# Single-file Streamlit Application
 # ============================================================
 
-st.markdown("""
+GAME_HTML = r"""
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
 <style>
 
-html, body, [class*="css"] {
-    font-family: "Malgun Gothic", sans-serif;
+* {
+    box-sizing: border-box;
 }
 
-.stApp {
-    background:
-        radial-gradient(
-            circle at center,
-            #202020 0%,
-            #101010 45%,
-            #050505 100%
-        );
-    color: #dddddd;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: Arial, "Malgun Gothic", sans-serif;
+    user-select: none;
 }
 
-.block-container {
-    max-width: 900px;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+body {
+    color: #ddd;
 }
 
-.game-title {
+#gameWrapper {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #090909;
+    cursor: crosshair;
+}
+
+#hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+#topLeft {
+    position: absolute;
+    left: 22px;
+    top: 20px;
+    color: #aaa;
+    font-size: 14px;
+    text-shadow: 0 2px 4px #000;
+}
+
+#healthOuter {
+    width: 180px;
+    height: 9px;
+    margin-top: 7px;
+    border: 1px solid #555;
+    background: #111;
+}
+
+#healthInner {
+    width: 100%;
+    height: 100%;
+    background: #777;
+    transition: width .15s;
+}
+
+#objective {
+    position: absolute;
+    right: 22px;
+    top: 20px;
+    text-align: right;
+    color: #aaa;
+    font-size: 14px;
+    text-shadow: 0 2px 4px #000;
+}
+
+#interaction {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 18px;
+    background: rgba(0,0,0,.75);
+    border: 1px solid #555;
+    color: #ddd;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+#message {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 300px;
+    max-width: 700px;
     text-align: center;
-    font-size: 46px;
-    font-weight: 900;
-    letter-spacing: 8px;
-    color: #d8d8d8;
-    text-shadow:
-        0 0 4px #ffffff33,
-        0 0 18px #000000;
-    margin-bottom: 5px;
+    color: #bbb;
+    font-size: 15px;
+    text-shadow: 0 2px 5px #000;
+    opacity: 0;
+    transition: opacity .25s;
 }
 
-.game-subtitle {
+#centerText {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
-    color: #777777;
-    font-size: 13px;
-    letter-spacing: 4px;
-    margin-bottom: 30px;
+    pointer-events: none;
 }
 
-.story-box {
-    background: rgba(10,10,10,0.88);
-    border: 1px solid #333333;
-    padding: 25px;
-    border-radius: 4px;
-    line-height: 1.9;
-    color: #bdbdbd;
-    box-shadow: 0 0 30px #000000;
-}
-
-.warning {
-    color: #b33a3a;
+#centerText .big {
+    font-size: 54px;
+    letter-spacing: 12px;
     font-weight: bold;
 }
 
-.item-box {
-    background: #111111;
-    border: 1px solid #333333;
-    padding: 14px;
-    margin: 5px 0;
-    border-radius: 3px;
+#centerText .small {
+    margin-top: 15px;
+    color: #999;
+    font-size: 15px;
+    letter-spacing: 3px;
 }
 
-.map-container {
-    background: #080808;
-    border: 2px solid #303030;
-    padding: 12px;
-    border-radius: 5px;
-    box-shadow:
-        inset 0 0 30px #000000,
-        0 0 20px #000000;
-}
-
-.map-row {
+#startScreen,
+#gameOverScreen,
+#escapeScreen {
+    position: absolute;
+    inset: 0;
     display: flex;
     justify-content: center;
-}
-
-.map-cell {
-    width: 46px;
-    height: 46px;
-    margin: 2px;
-    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    border-radius: 2px;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(35,35,35,.55),
+            rgba(0,0,0,.98)
+        );
+    z-index: 20;
 }
 
-.wall {
-    background: #151515;
-    border: 1px solid #222222;
-}
-
-.floor {
-    background: #353535;
-    border: 1px solid #454545;
-}
-
-.player {
-    background: #484848;
-    border: 1px solid #777777;
-    box-shadow: 0 0 12px #ffffff22;
-}
-
-.monster {
-    background: #3a1111;
-    border: 1px solid #762222;
-    box-shadow: 0 0 15px #8b000044;
-}
-
-.key {
-    background: #423a16;
-    border: 1px solid #806f22;
-}
-
-.door {
-    background: #152b19;
-    border: 1px solid #305d38;
-}
-
-.exit {
-    background: #162c35;
-    border: 1px solid #315b68;
-}
-
-.status {
-    background: #0d0d0d;
-    border: 1px solid #292929;
-    padding: 14px;
+.screenBox {
+    width: min(700px, 90%);
     text-align: center;
-    margin-bottom: 15px;
-    color: #aaa;
 }
 
-.death-screen {
-    text-align: center;
-    padding: 80px 20px;
-    background: #050505;
-    border: 1px solid #330000;
-    box-shadow: 0 0 80px #300000;
-}
-
-.death-title {
-    font-size: 54px;
-    color: #8b1515;
-    letter-spacing: 8px;
+.title {
+    font-size: clamp(42px, 7vw, 82px);
     font-weight: 900;
+    letter-spacing: 14px;
+    color: #ddd;
+    text-shadow:
+        0 0 5px #fff2,
+        0 0 30px #000;
 }
 
-.escape-screen {
-    text-align: center;
-    padding: 70px 20px;
-    background: #080d0a;
-    border: 1px solid #315d3a;
+.subtitle {
+    margin-top: 12px;
+    color: #666;
+    letter-spacing: 5px;
+    font-size: 13px;
 }
 
-.escape-title {
-    font-size: 48px;
-    color: #9bbba0;
+.story {
+    margin: 45px auto 30px;
+    max-width: 570px;
+    line-height: 2;
+    color: #aaa;
+    font-size: 15px;
+}
+
+button {
+    border: 1px solid #555;
+    background: #111;
+    color: #ccc;
+    padding: 13px 35px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #222;
+    color: white;
+}
+
+.controls {
+    margin-top: 25px;
+    color: #555;
+    font-size: 12px;
+    line-height: 2;
+}
+
+#gameOverScreen,
+#escapeScreen {
+    display: none;
+}
+
+#gameOverScreen .title {
+    color: #722020;
+}
+
+#escapeScreen .title {
+    color: #9aa99d;
+}
+
+#vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(
+            circle,
+            transparent 25%,
+            rgba(0,0,0,.15) 50%,
+            rgba(0,0,0,.75) 100%
+        );
+    z-index: 5;
+}
+
+#redOverlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(90,0,0,0);
+    z-index: 6;
+}
+
+#noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 7;
+    opacity: 0;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,.025) 0px,
+            rgba(255,255,255,.025) 1px,
+            transparent 1px,
+            transparent 4px
+        );
+}
+
+#pauseScreen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,.75);
+    z-index: 15;
+}
+
+.pauseText {
+    color: #aaa;
+    font-size: 25px;
     letter-spacing: 8px;
-}
-
-.message {
-    background: #101010;
-    border-left: 3px solid #555555;
-    padding: 14px 18px;
-    margin: 12px 0;
-    color: #bdbdbd;
-}
-
-.secret-message {
-    background: #120d0d;
-    border-left: 3px solid #642020;
-    padding: 16px;
-    color: #c58d8d;
 }
 
 </style>
-""", unsafe_allow_html=True)
 
+</head>
 
-# ============================================================
-# GAME DATA
-# ============================================================
+<body>
 
-MAP = [
-    "###############",
-    "#.....#.......#",
-    "#.###.#.#####.#",
-    "#.#...#.....#.#",
-    "#.#.#######.#.#",
-    "#.#...........#",
-    "#.#####.#######",
-    "#.......#.....#",
-    "#######.#.###.#",
-    "#.......#...#.#",
-    "#.#########.#.#",
-    "#...........#.#",
-    "#.###########.#",
-    "#.............#",
-    "###############",
-]
+<div id="gameWrapper">
 
-MAP_HEIGHT = len(MAP)
-MAP_WIDTH = len(MAP[0])
+<canvas id="gameCanvas"></canvas>
 
+<div id="hud">
 
-# ============================================================
-# SESSION STATE
-# ============================================================
-
-def init_game():
-    st.session_state.started = False
-    st.session_state.game_over = False
-    st.session_state.escaped = False
-
-    st.session_state.player = [1, 1]
-    st.session_state.monster = [13, 13]
-
-    st.session_state.key = [11, 1]
-    st.session_state.exit = [13, 13]
-
-    st.session_state.has_key = False
-    st.session_state.door_open = False
-
-    st.session_state.turn = 0
-
-    st.session_state.message = (
-        "어두운 집 안에서 정신을 차렸다."
-    )
-
-    st.session_state.messages = []
-
-    st.session_state.found_note = False
-    st.session_state.secret = False
-
-    st.session_state.noise = 0
-
-    st.session_state.monster_alert = 0
-
-    st.session_state.last_move = time.time()
-
-
-if "started" not in st.session_state:
-    init_game()
-
-
-# ============================================================
-# UTILITY
-# ============================================================
-
-def is_wall(x, y):
-    if y < 0 or y >= MAP_HEIGHT:
-        return True
-
-    if x < 0 or x >= MAP_WIDTH:
-        return True
-
-    return MAP[y][x] == "#"
-
-
-def distance(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-
-def add_message(text):
-    st.session_state.messages.append(text)
-
-    if len(st.session_state.messages) > 6:
-        st.session_state.messages.pop(0)
-
-
-def valid_position(x, y):
-    return not is_wall(x, y)
-
-
-# ============================================================
-# MONSTER AI
-# ============================================================
-
-def monster_moves_toward_player():
-    monster = st.session_state.monster
-    player = st.session_state.player
-
-    mx, my = monster
-    px, py = player
-
-    candidates = []
-
-    dx = px - mx
-    dy = py - my
-
-    if abs(dx) > abs(dy):
-        if dx > 0:
-            candidates.append((mx + 1, my))
-        elif dx < 0:
-            candidates.append((mx - 1, my))
-
-        if dy > 0:
-            candidates.append((mx, my + 1))
-        elif dy < 0:
-            candidates.append((mx, my - 1))
-
-    else:
-        if dy > 0:
-            candidates.append((mx, my + 1))
-        elif dy < 0:
-            candidates.append((mx, my - 1))
-
-        if dx > 0:
-            candidates.append((mx + 1, my))
-        elif dx < 0:
-            candidates.append((mx - 1, my))
-
-    directions = [
-        (1, 0),
-        (-1, 0),
-        (0, 1),
-        (0, -1),
-    ]
-
-    random.shuffle(directions)
-
-    for dx2, dy2 in directions:
-        candidates.append((mx + dx2, my + dy2))
-
-    for nx, ny in candidates:
-        if valid_position(nx, ny):
-            st.session_state.monster = [nx, ny]
-            break
-
-
-def monster_turn():
-    if st.session_state.game_over:
-        return
-
-    if st.session_state.escaped:
-        return
-
-    distance_to_player = distance(
-        st.session_state.player,
-        st.session_state.monster
-    )
-
-    # 플레이어가 가까우면 더 적극적으로 움직임
-    if distance_to_player <= 7:
-        monster_moves_toward_player()
-        st.session_state.monster_alert += 1
-
-    else:
-        # 멀리 있으면 가끔 랜덤 이동
-        if random.random() < 0.45:
-            monster_moves_toward_player()
-
-    # 충돌
-    if st.session_state.player == st.session_state.monster:
-        st.session_state.game_over = True
-        st.session_state.message = "무언가가 바로 뒤에 있었다."
-
-
-# ============================================================
-# EVENTS
-# ============================================================
-
-def check_events():
-
-    px, py = st.session_state.player
-
-    # 열쇠
-    if [px, py] == st.session_state.key:
-
-        if not st.session_state.has_key:
-            st.session_state.has_key = True
-
-            add_message(
-                "바닥에서 오래된 열쇠 하나를 발견했다."
-            )
-
-            add_message(
-                "열쇠에는 작은 숫자 '03'이 새겨져 있다."
-            )
-
-    # 특정 위치에서 메모 발견
-    if [px, py] == [9, 11]:
-
-        if not st.session_state.found_note:
-
-            st.session_state.found_note = True
-
-            add_message(
-                "벽에 누군가 급하게 남긴 글씨가 있다."
-            )
-
-            add_message(
-                "『문을 열지 마. 네가 들은 소리는 사람이 아니야.』"
-            )
-
-    # 비밀 이벤트
-    if [px, py] == [1, 13]:
-
-        if not st.session_state.secret:
-
-            st.session_state.secret = True
-
-            add_message(
-                "벽 안쪽에서 이상한 긁는 소리가 들린다."
-            )
-
-    # 출구
-    if [px, py] == st.session_state.exit:
-
-        if st.session_state.has_key:
-
-            st.session_state.door_open = True
-            st.session_state.escaped = True
-            st.session_state.message = (
-                "열쇠가 맞았다. 문이 천천히 열렸다."
-            )
-
-        else:
-
-            add_message(
-                "문은 잠겨 있다. 열쇠가 필요하다."
-            )
-
-
-# ============================================================
-# PLAYER MOVEMENT
-# ============================================================
-
-def move_player(dx, dy):
-
-    if not st.session_state.started:
-        return
-
-    if st.session_state.game_over:
-        return
-
-    if st.session_state.escaped:
-        return
-
-    px, py = st.session_state.player
-
-    nx = px + dx
-    ny = py + dy
-
-    if is_wall(nx, ny):
-
-        add_message(
-            "벽에 막혀 있다."
-        )
-
-        # 소음 증가
-        st.session_state.noise += 1
-
-        if st.session_state.noise >= 2:
-            monster_turn()
-            st.session_state.noise = 0
-
-        return
-
-    st.session_state.player = [nx, ny]
-
-    st.session_state.turn += 1
-
-    st.session_state.noise = 0
-
-    check_events()
-
-    monster_turn()
-
-    # 가까워졌을 때 경고
-    d = distance(
-        st.session_state.player,
-        st.session_state.monster
-    )
-
-    if d <= 3 and not st.session_state.game_over:
-
-        add_message(
-            "어딘가에서 발소리가 들린다."
-        )
-
-    elif d <= 5 and not st.session_state.game_over:
-
-        add_message(
-            "무언가가 가까이 있는 것 같다."
-        )
-
-
-# ============================================================
-# MAP RENDER
-# ============================================================
-
-def render_map():
-
-    player_x, player_y = st.session_state.player
-    monster_x, monster_y = st.session_state.monster
-    key_x, key_y = st.session_state.key
-    exit_x, exit_y = st.session_state.exit
-
-    html = '<div class="map-container">'
-
-    for y in range(MAP_HEIGHT):
-
-        html += '<div class="map-row">'
-
-        for x in range(MAP_WIDTH):
-
-            cell = MAP[y][x]
-
-            cell_class = "floor"
-            symbol = ""
-
-            if cell == "#":
-
-                cell_class = "wall"
-                symbol = ""
-
-            else:
-
-                # 플레이어
-                if [x, y] == [player_x, player_y]:
-
-                    cell_class = "player"
-                    symbol = "●"
-
-                # 괴물
-                elif [x, y] == [monster_x, monster_y]:
-
-                    # 일정 거리 안에서만 표시
-                    d = distance(
-                        [player_x, player_y],
-                        [monster_x, monster_y]
-                    )
-
-                    if d <= 6:
-
-                        cell_class = "monster"
-                        symbol = "?"
-
-                    else:
-
-                        cell_class = "floor"
-                        symbol = ""
-
-                # 열쇠
-                elif [x, y] == [key_x, key_y]:
-
-                    if not st.session_state.has_key:
-
-                        cell_class = "key"
-                        symbol = "◆"
-
-                # 출구
-                elif [x, y] == [exit_x, exit_y]:
-
-                    cell_class = "exit"
-
-                    if st.session_state.door_open:
-                        symbol = "↗"
-                    else:
-                        symbol = "▣"
-
-            html += (
-                f'<div class="map-cell {cell_class}">'
-                f'{symbol}'
-                f'</div>'
-            )
-
-        html += '</div>'
-
-    html += '</div>'
-
-    st.markdown(html, unsafe_allow_html=True)
-
-
-# ============================================================
-# TITLE
-# ============================================================
-
-st.markdown(
-    '<div class="game-title">THE EMPTY HOUSE</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="game-subtitle">SOMETHING IS STILL INSIDE</div>',
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# START SCREEN
-# ============================================================
-
-if not st.session_state.started:
-
-    st.markdown(
-        """
-        <div class="story-box">
-
-        <b>새벽 2시 17분.</b>
-
-        <br><br>
-
-        눈을 뜨자 낯선 방이었다.
-
-        <br><br>
-
-        창문은 잠겨 있고,
-        현관문은 굳게 닫혀 있다.
-
-        <br>
-
-        휴대폰은 켜지지 않는다.
-
-        <br><br>
-
-        그리고 집 안 어딘가에서,
-
-        <br><br>
-
-        <span class="warning">
-        누군가 걷는 소리가 들린다.
-        </span>
-
-        <br><br>
-
-        이곳에서 나가야 한다.
-
+    <div id="topLeft">
+        체력
+        <div id="healthOuter">
+            <div id="healthInner"></div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.write("")
-
-    if st.button(
-        "게임 시작",
-        use_container_width=True,
-        type="primary"
-    ):
-
-        st.session_state.started = True
-
-        st.session_state.message = (
-            "어두운 방이다. 주변을 살펴보자."
-        )
-
-        add_message(
-            "방 밖으로 나갈 방법을 찾아야 한다."
-        )
-
-        st.rerun()
-
-    st.stop()
-
-
-# ============================================================
-# GAME OVER
-# ============================================================
-
-if st.session_state.game_over:
-
-    st.markdown(
-        """
-        <div class="death-screen">
-
-        <div class="death-title">
-        CAUGHT
-        </div>
-
-        <br>
-
-        뒤에서 들리던 발소리가 멈췄다.
-
-        <br><br>
-
-        그리고 모든 것이 조용해졌다.
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.write("")
-
-    if st.button(
-        "다시 시작",
-        use_container_width=True
-    ):
-
-        init_game()
-        st.rerun()
-
-    st.stop()
-
-
-# ============================================================
-# ESCAPE
-# ============================================================
-
-if st.session_state.escaped:
-
-    st.markdown(
-        """
-        <div class="escape-screen">
-
-        <div class="escape-title">
-        ESCAPED
-        </div>
-
-        <br>
-
-        문 밖으로 나왔다.
-
-        <br><br>
-
-        차가운 새벽 공기가 느껴진다.
-
-        <br><br>
-
-        하지만 이상하다.
-
-        <br><br>
-
-        집 안쪽을 돌아보자,
-
-        <br>
-
-        2층 창문에 누군가 서 있었다.
-
-        <br><br>
-
-        <b>그리고 그 사람은 웃고 있었다.</b>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.write("")
-
-    if st.button(
-        "처음부터 다시",
-        use_container_width=True
-    ):
-
-        init_game()
-        st.rerun()
-
-    st.stop()
-
-
-# ============================================================
-# STATUS
-# ============================================================
-
-d = distance(
-    st.session_state.player,
-    st.session_state.monster
-)
-
-if d <= 2:
-
-    status_text = "⚠️ 위험하다. 무언가가 바로 근처에 있다."
-
-elif d <= 4:
-
-    status_text = "발소리가 가까워지고 있다."
-
-elif d <= 6:
-
-    status_text = "멀리서 이상한 소리가 들린다."
-
-else:
-
-    status_text = "주변은 조용하다."
-
-st.markdown(
-    f"""
-    <div class="status">
-    {status_text}
     </div>
-    """,
-    unsafe_allow_html=True
-)
 
-
-# ============================================================
-# MAIN GAME
-# ============================================================
-
-render_map()
-
-
-# ============================================================
-# CONTROLS
-# ============================================================
-
-st.write("")
-
-st.markdown(
-    "<div style='text-align:center;color:#777;'>MOVE</div>",
-    unsafe_allow_html=True
-)
-
-col1, col2, col3 = st.columns(3)
-
-with col2:
-
-    if st.button(
-        "▲",
-        use_container_width=True
-    ):
-        move_player(0, -1)
-        st.rerun()
-
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-
-    if st.button(
-        "◀",
-        use_container_width=True
-    ):
-        move_player(-1, 0)
-        st.rerun()
-
-with col2:
-
-    if st.button(
-        "▼",
-        use_container_width=True
-    ):
-        move_player(0, 1)
-        st.rerun()
-
-with col3:
-
-    if st.button(
-        "▶",
-        use_container_width=True
-    ):
-        move_player(1, 0)
-        st.rerun()
-
-
-# ============================================================
-# INVENTORY
-# ============================================================
-
-st.write("")
-
-st.markdown(
-    "<h4>소지품</h4>",
-    unsafe_allow_html=True
-)
-
-if st.session_state.has_key:
-
-    st.markdown(
-        """
-        <div class="item-box">
-        🔑 오래된 열쇠
+    <div id="objective">
+        <div id="objectiveText">
+            집 밖으로 나가야 한다.
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
 
-else:
+    <div id="interaction">
+        E
+    </div>
 
-    st.markdown(
-        """
-        <div class="item-box">
-        소지품 없음
+    <div id="message"></div>
+
+</div>
+
+<div id="vignette"></div>
+<div id="redOverlay"></div>
+<div id="noise"></div>
+
+<div id="startScreen">
+
+    <div class="screenBox">
+
+        <div class="title">
+            THE EMPTY HOUSE
         </div>
-        """,
-        unsafe_allow_html=True
-    )
 
-
-# ============================================================
-# MESSAGE LOG
-# ============================================================
-
-st.write("")
-
-st.markdown(
-    "<h4>상황</h4>",
-    unsafe_allow_html=True
-)
-
-for msg in reversed(st.session_state.messages):
-
-    st.markdown(
-        f"""
-        <div class="message">
-        {msg}
+        <div class="subtitle">
+            SOMETHING IS STILL INSIDE
         </div>
-        """,
-        unsafe_allow_html=True
-    )
 
+        <div class="story">
 
-# ============================================================
-# SECRET
-# ============================================================
+            새벽 2시 17분.<br>
+            정신을 차리자 낯선 집 안에 있었다.<br>
+            휴대폰은 작동하지 않는다.<br>
+            현관문은 잠겨 있다.<br><br>
 
-if st.session_state.secret:
-
-    st.markdown(
-        """
-        <div class="secret-message">
-
-        벽을 자세히 살펴보자.
-
-        <br><br>
-
-        긁힌 자국 사이에 작은 글자가 있다.
-
-        <br><br>
-
-        <b>03 · 17 · 02</b>
-
-        <br><br>
-
-        누군가 이 집에서 무언가를 반복하고 있었다.
+            그리고 어딘가에서<br>
+            발소리가 들린다.
 
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+
+        <button id="startButton">
+            게임 시작
+        </button>
+
+        <div class="controls">
+            WASD — 이동<br>
+            E — 상호작용<br>
+            SHIFT — 달리기<br>
+            F — 손전등
+        </div>
+
+    </div>
+
+</div>
+
+<div id="gameOverScreen">
+
+    <div class="screenBox">
+
+        <div class="title">
+            CAUGHT
+        </div>
+
+        <div class="story">
+            뒤에서 들리던 발소리가 멈췄다.<br><br>
+            너무 조용하다.
+        </div>
+
+        <button id="restartButton">
+            다시 시작
+        </button>
+
+    </div>
+
+</div>
+
+<div id="escapeScreen">
+
+    <div class="screenBox">
+
+        <div class="title">
+            ESCAPED
+        </div>
+
+        <div class="story">
+            문이 열렸다.<br><br>
+            차가운 공기가 들어온다.<br><br>
+            당신은 집 밖으로 나왔다.<br><br>
+            하지만 2층 창문을 바라본 순간,
+            누군가 서 있는 것이 보였다.
+        </div>
+
+        <button id="escapeRestartButton">
+            다시 시작
+        </button>
+
+    </div>
+
+</div>
+
+<div id="pauseScreen">
+    <div class="pauseText">
+        PAUSED
+    </div>
+</div>
+
+<script>
+
+// ============================================================
+// CANVAS
+// ============================================================
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+function resizeCanvas() {
+
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    canvas.width = W;
+    canvas.height = H;
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+resizeCanvas();
 
 
-# ============================================================
-# DEBUG / GAME INFO
-# ============================================================
+// ============================================================
+// GAME CONSTANTS
+// ============================================================
 
-with st.expander("게임 정보"):
+const TILE = 64;
 
-    st.write(
-        f"현재 위치: {st.session_state.player}"
-    )
+const MAP = [
 
-    st.write(
-        f"괴물 위치: {st.session_state.monster}"
-    )
+"############################################################",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..............###########.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............#.........#.................................#",
+"#..............###########.................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#........#######################...........................#",
+"#........#.....................#...........................#",
+"#........#.....................#...........................#",
+"#........#.....................#...........................#",
+"#........#.....................#...........................#",
+"#........#.....................#...........................#",
+"#........#.....................#...........................#",
+"#........#######################...........................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#....................###########...........................#",
+"#....................#.........#...........................#",
+"#....................#.........#...........................#",
+"#....................#.........#...........................#",
+"#....................#.........#...........................#",
+"#....................#.........#...........................#",
+"#....................#.........#...........................#",
+"#....................###########...........................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"#..........................................................#",
+"############################################################"
 
-    st.write(
-        f"괴물까지 거리: {d}"
-    )
+];
 
-    st.write(
-        f"이동 횟수: {st.session_state.turn}"
-    )
+const MAP_H = MAP.length;
+const MAP_W = MAP[0].length;
 
-    st.write(
-        f"열쇠 획득: {st.session_state.has_key}"
-    )
+const WORLD_W = MAP_W * TILE;
+const WORLD_H = MAP_H * TILE;
 
 
-# ============================================================
-# RESTART
-# ============================================================
+// ============================================================
+// GAME STATE
+// ============================================================
 
-st.write("")
+let gameStarted = false;
+let gameOver = false;
+let escaped = false;
+let paused = false;
 
-if st.button(
-    "게임 초기화",
-    use_container_width=True
-):
+let keys = {};
 
-    init_game()
-    st.rerun()
+let player = {
+    x: 6 * TILE,
+    y: 6 * TILE,
+    radius: 15,
+    speed: 180,
+    health: 100,
+    flashlight: true,
+    stamina: 100
+};
+
+let monster = {
+    x: 43 * TILE,
+    y: 43 * TILE,
+    radius: 22,
+    speed: 78,
+    chaseSpeed: 145,
+    active: false,
+    anger: 0
+};
+
+let keyItem = {
+    x: 12 * TILE,
+    y: 46 * TILE,
+    collected: false
+};
+
+let exitDoor = {
+    x: 56 * TILE,
+    y: 3 * TILE,
+    radius: 30,
+    open: false
+};
+
+let note = {
+    x: 30 * TILE,
+    y: 20 * TILE,
+    found: false
+};
+
+let camera = {
+    x: 0,
+    y: 0,
+    shake: 0
+};
+
+let timePlayed = 0;
+let lastTime = performance.now();
+
+let messageTimer = 0;
+let randomEventTimer = 8;
+
+let footstepTimer = 0;
+let heartbeatTimer = 0;
+
+let flicker = 0;
+
+
+// ============================================================
+// AUDIO
+// ============================================================
+
+let audioContext = null;
+
+function initAudio() {
+
+    if (!audioContext) {
+
+        try {
+            audioContext =
+                new (window.AudioContext ||
+                window.webkitAudioContext)();
+        }
+
+        catch (e) {
+            audioContext = null;
+        }
+    }
+}
+
+function beep(
+    frequency,
+    duration,
+    volume,
+    type = "sine"
+) {
+
+    if (!audioContext) return;
+
+    try {
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        oscillator.type = type;
+
+        oscillator.frequency.value =
+            frequency;
+
+        gain.gain.setValueAtTime(
+            volume,
+            audioContext.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration
+        );
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.start();
+
+        oscillator.stop(
+            audioContext.currentTime + duration
+        );
+    }
+
+    catch (e) {}
+
+}
+
+
+// ============================================================
+// UI
+// ============================================================
+
+const startScreen =
+    document.getElementById("startScreen");
+
+const gameOverScreen =
+    document.getElementById("gameOverScreen");
+
+const escapeScreen =
+    document.getElementById("escapeScreen");
+
+const pauseScreen =
+    document.getElementById("pauseScreen");
+
+const messageElement =
+    document.getElementById("message");
+
+const interactionElement =
+    document.getElementById("interaction");
+
+const objectiveElement =
+    document.getElementById("objectiveText");
+
+const healthElement =
+    document.getElementById("healthInner");
+
+const redOverlay =
+    document.getElementById("redOverlay");
+
+const noiseElement =
+    document.getElementById("noise");
+
+
+// ============================================================
+// MESSAGES
+// ============================================================
+
+function showMessage(text, duration = 3) {
+
+    messageElement.innerHTML = text;
+
+    messageElement.style.opacity = "1";
+
+    messageTimer = duration;
+}
+
+function updateMessage(dt) {
+
+    if (messageTimer > 0) {
+
+        messageTimer -= dt;
+
+        if (messageTimer <= 0) {
+            messageElement.style.opacity = "0";
+        }
+    }
+}
+
+
+// ============================================================
+// MAP COLLISION
+// ============================================================
+
+function isWall(tx, ty) {
+
+    if (
+        tx < 0 ||
+        ty < 0 ||
+        tx >= MAP_W ||
+        ty >= MAP_H
+    ) {
+        return true;
+    }
+
+    return MAP[ty][tx] === "#";
+}
+
+function circleHitsWall(x, y, radius) {
+
+    const left =
+        Math.floor((x - radius) / TILE);
+
+    const right =
+        Math.floor((x + radius) / TILE);
+
+    const top =
+        Math.floor((y - radius) / TILE);
+
+    const bottom =
+        Math.floor((y + radius) / TILE);
+
+    for (
+        let ty = top;
+        ty <= bottom;
+        ty++
+    ) {
+
+        for (
+            let tx = left;
+            tx <= right;
+            tx++
+        ) {
+
+            if (isWall(tx, ty)) {
+
+                const rx = tx * TILE;
+                const ry = ty * TILE;
+
+                const closestX =
+                    Math.max(
+                        rx,
+                        Math.min(x, rx + TILE)
+                    );
+
+                const closestY =
+                    Math.max(
+                        ry,
+                        Math.min(y, ry + TILE)
+                    );
+
+                const dx =
+                    x - closestX;
+
+                const dy =
+                    y - closestY;
+
+                if (
+                    dx * dx +
+                    dy * dy <
+                    radius * radius
+                ) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+function moveWithCollision(
+    object,
+    dx,
+    dy
+) {
+
+    const nx = object.x + dx;
+
+    if (
+        !circleHitsWall(
+            nx,
+            object.y,
+            object.radius
+        )
+    ) {
+        object.x = nx;
+    }
+
+    const ny = object.y + dy;
+
+    if (
+        !circleHitsWall(
+            object.x,
+            ny,
+            object.radius
+        )
+    ) {
+        object.y = ny;
+    }
+}
+
+
+// ============================================================
+// DISTANCE
+// ============================================================
+
+function distance(
+    x1,
+    y1,
+    x2,
+    y2
+) {
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    return Math.sqrt(
+        dx * dx + dy * dy
+    );
+}
+
+
+// ============================================================
+// LINE OF SIGHT
+// ============================================================
+
+function hasLineOfSight(
+    x1,
+    y1,
+    x2,
+    y2
+) {
+
+    const d =
+        distance(
+            x1,
+            y1,
+            x2,
+            y2
+        );
+
+    const steps =
+        Math.ceil(d / 18);
+
+    for (
+        let i = 0;
+        i <= steps;
+        i++
+    ) {
+
+        const t = i / steps;
+
+        const x =
+            x1 + (x2 - x1) * t;
+
+        const y =
+            y1 + (y2 - y1) * t;
+
+        if (
+            isWall(
+                Math.floor(x / TILE),
+                Math.floor(y / TILE)
+            )
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// ============================================================
+// PLAYER
+// ============================================================
+
+function updatePlayer(dt) {
+
+    let dx = 0;
+    let dy = 0;
+
+    if (keys["w"] || keys["arrowup"]) {
+        dy -= 1;
+    }
+
+    if (keys["s"] || keys["arrowdown"]) {
+        dy += 1;
+    }
+
+    if (keys["a"] || keys["arrowleft"]) {
+        dx -= 1;
+    }
+
+    if (keys["d"] || keys["arrowright"]) {
+        dx += 1;
+    }
+
+    const moving =
+        dx !== 0 || dy !== 0;
+
+    if (moving) {
+
+        const length =
+            Math.sqrt(
+                dx * dx +
+                dy * dy
+            );
+
+        dx /= length;
+        dy /= length;
+
+        let currentSpeed =
+            player.speed;
+
+        if (
+            keys["shift"] &&
+            player.stamina > 0
+        ) {
+
+            currentSpeed = 285;
+
+            player.stamina -=
+                35 * dt;
+
+        }
+
+        else {
+
+            player.stamina +=
+                20 * dt;
+        }
+
+        player.stamina =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    player.stamina
+                )
+            );
+
+        moveWithCollision(
+            player,
+            dx * currentSpeed * dt,
+            dy * currentSpeed * dt
+        );
+
+        footstepTimer -= dt;
+
+        if (
+            footstepTimer <= 0
+        ) {
+
+            beep(
+                90 + Math.random() * 20,
+                .05,
+                .025,
+                "square"
+            );
+
+            footstepTimer =
+                keys["shift"]
+                    ? .22
+                    : .34;
+        }
+    }
+
+    else {
+
+        player.stamina +=
+            30 * dt;
+
+        player.stamina =
+            Math.min(
+                100,
+                player.stamina
+            );
+
+        footstepTimer = 0;
+    }
+}
+
+
+// ============================================================
+// MONSTER
+// ============================================================
+
+function updateMonster(dt) {
+
+    const d =
+        distance(
+            monster.x,
+            monster.y,
+            player.x,
+            player.y
+        );
+
+    if (!monster.active) {
+
+        if (
+            d < 550 ||
+            timePlayed > 18
+        ) {
+
+            monster.active = true;
+
+            showMessage(
+                "어딘가에서 발소리가 들린다.",
+                3
+            );
+
+            beep(
+                55,
+                .8,
+                .05,
+                "sawtooth"
+            );
+        }
+
+        return;
+    }
+
+    let targetSpeed =
+        monster.speed;
+
+    if (d < 650) {
+
+        targetSpeed =
+            monster.chaseSpeed;
+
+        monster.anger +=
+            dt;
+    }
+
+    else {
+
+        targetSpeed =
+            monster.speed;
+    }
+
+    let dx =
+        player.x - monster.x;
+
+    let dy =
+        player.y - monster.y;
+
+    const len =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+    if (len > 0) {
+
+        dx /= len;
+        dy /= len;
+
+        moveWithCollision(
+            monster,
+            dx * targetSpeed * dt,
+            dy * targetSpeed * dt
+        );
+    }
+
+    if (d < 420) {
+
+        heartbeatTimer -= dt;
+
+        if (
+            heartbeatTimer <= 0
+        ) {
+
+            beep(
+                65,
+                .12,
+                .045,
+                "sine"
+            );
+
+            heartbeatTimer =
+                Math.max(
+                    .25,
+                    d / 1000
+                );
+        }
+    }
+
+    if (d < 80) {
+
+        player.health -=
+            32 * dt;
+
+        camera.shake =
+            Math.max(
+                camera.shake,
+                8
+            );
+
+        redOverlay.style.background =
+            "rgba(90,0,0,.18)";
+
+        if (
+            player.health <= 0
+        ) {
+
+            player.health = 0;
+
+            endGame();
+        }
+    }
+
+    else if (d < 180) {
+
+        redOverlay.style.background =
+            "rgba(90,0,0,.08)";
+    }
+
+    else {
+
+        redOverlay.style.background =
+            "rgba(90,0,0,0)";
+    }
+}
+
+
+// ============================================================
+// ITEMS
+// ============================================================
+
+function updateItems() {
+
+    if (
+        !keyItem.collected
+    ) {
+
+        const d =
+            distance(
+                player.x,
+                player.y,
+                keyItem.x,
+                keyItem.y
+            );
+
+        if (d < 45) {
+
+            keyItem.collected = true;
+
+            beep(
+                700,
+                .12,
+                .05,
+                "sine"
+            );
+
+            showMessage(
+                "낡은 열쇠를 주웠다.",
+                3
+            );
+
+            objectiveElement.innerText =
+                "열쇠를 사용해 현관문을 열어야 한다.";
+        }
+    }
+
+    if (
+        !note.found
+    ) {
+
+        const d =
+            distance(
+                player.x,
+                player.y,
+                note.x,
+                note.y
+            );
+
+        if (d < 55) {
+
+            interactionElement.style.opacity =
+                "1";
+
+            interactionElement.innerText =
+                "E  조사하기";
+
+        }
+
+        else {
+
+            interactionElement.style.opacity =
+                "0";
+        }
+    }
+
+    const doorDistance =
+        distance(
+            player.x,
+            player.y,
+            exitDoor.x,
+            exitDoor.y
+        );
+
+    if (
+        doorDistance < 65
+    ) {
+
+        interactionElement.style.opacity =
+            "1";
+
+        if (
+            keyItem.collected
+        ) {
+
+            interactionElement.innerText =
+                "E  문 열기";
+        }
+
+        else {
+
+            interactionElement.innerText =
+                "E  잠겨 있음";
+        }
+    }
+
+    else if (
+        distance(
+            player.x,
+            player.y,
+            note.x,
+            note.y
+        ) >= 55
+    ) {
+
+        interactionElement.style.opacity =
+            "0";
+    }
+}
+
+
+// ============================================================
+// INTERACTION
+// ============================================================
+
+function interact() {
+
+    if (!gameStarted) {
+        return;
+    }
+
+    if (gameOver || escaped) {
+        return;
+    }
+
+    const noteDistance =
+        distance(
+            player.x,
+            player.y,
+            note.x,
+            note.y
+        );
+
+    if (
+        noteDistance < 55 &&
+        !note.found
+    ) {
+
+        note.found = true;
+
+        showMessage(
+            "『문을 열지 마. 네가 들은 소리는 사람이 아니야.』",
+            6
+        );
+
+        beep(
+            130,
+            .4,
+            .04,
+            "triangle"
+        );
+
+        return;
+    }
+
+    const doorDistance =
+        distance(
+            player.x,
+            player.y,
+            exitDoor.x,
+            exitDoor.y
+        );
+
+    if (
+        doorDistance < 65
+    ) {
+
+        if (
+            !keyItem.collected
+        ) {
+
+            showMessage(
+                "문은 잠겨 있다.",
+                2
+            );
+
+            beep(
+                80,
+                .12,
+                .04,
+                "square"
+            );
+
+            return;
+        }
+
+        exitDoor.open = true;
+
+        escaped = true;
+
+        escapeScreen.style.display =
+            "flex";
+
+        beep(
+            400,
+            .4,
+            .06,
+            "sine"
+        );
+    }
+}
+
+
+// ============================================================
+// RANDOM EVENTS
+// ============================================================
+
+function randomEvent() {
+
+    const events = [
+
+        function() {
+
+            showMessage(
+                "위층에서 무언가 떨어지는 소리가 났다.",
+                3
+            );
+
+            beep(
+                70,
+                .3,
+                .05,
+                "square"
+            );
+        },
+
+        function() {
+
+            showMessage(
+                "누군가 방금 문을 닫은 것 같다.",
+                3
+            );
+
+            beep(
+                90,
+                .2,
+                .05,
+                "triangle"
+            );
+        },
+
+        function() {
+
+            showMessage(
+                "복도 끝에서 무언가 움직였다.",
+                3
+            );
+
+            monster.active = true;
+        },
+
+        function() {
+
+            showMessage(
+                "잠깐... 아무 소리도 들리지 않는다.",
+                3
+            );
+        },
+
+        function() {
+
+            showMessage(
+                "벽 너머에서 희미한 긁는 소리가 들린다.",
+                4
+            );
+
+            beep(
+                45,
+                .5,
+                .03,
+                "sawtooth"
+            );
+        }
+
+    ];
+
+    const event =
+        events[
+            Math.floor(
+                Math.random() *
+                events.length
+            )
+        ];
+
+    event();
+
+    randomEventTimer =
+        8 +
+        Math.random() * 12;
+}
+
+
+// ============================================================
+// CAMERA
+// ============================================================
+
+function updateCamera(dt) {
+
+    const targetX =
+        player.x - W / 2;
+
+    const targetY =
+        player.y - H / 2;
+
+    camera.x +=
+        (targetX - camera.x) *
+        Math.min(
+            1,
+            dt * 7
+        );
+
+    camera.y +=
+        (targetY - camera.y) *
+        Math.min(
+            1,
+            dt * 7
+        );
+
+    camera.x =
+        Math.max(
+            0,
+            Math.min(
+                WORLD_W - W,
+                camera.x
+            )
+        );
+
+    camera.y =
+        Math.max(
+            0,
+            Math.min(
+                WORLD_H - H,
+                camera.y
+            )
+        );
+
+    if (
+        camera.shake > 0
+    ) {
+
+        camera.shake *=
+            Math.pow(
+                .05,
+                dt
+            );
+
+        if (
+            camera.shake < .1
+        ) {
+            camera.shake = 0;
+        }
+    }
+}
+
+
+// ============================================================
+// DRAW WORLD
+// ============================================================
+
+function drawWorld() {
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    let shakeX = 0;
+    let shakeY = 0;
+
+    if (
+        camera.shake > 0
+    ) {
+
+        shakeX =
+            (Math.random() - .5) *
+            camera.shake;
+
+        shakeY =
+            (Math.random() - .5) *
+            camera.shake;
+    }
+
+    ctx.save();
+
+    ctx.translate(
+        -camera.x + shakeX,
+        -camera.y + shakeY
+    );
+
+    drawFloor();
+
+    drawObjects();
+
+    drawPlayer();
+
+    drawMonster();
+
+    ctx.restore();
+
+    drawDarkness();
+
+    drawNoise();
+}
+
+
+// ============================================================
+// FLOOR
+// ============================================================
+
+function drawFloor() {
+
+    const startX =
+        Math.floor(
+            camera.x / TILE
+        ) - 1;
+
+    const endX =
+        Math.ceil(
+            (camera.x + W) / TILE
+        ) + 1;
+
+    const startY =
+        Math.floor(
+            camera.y / TILE
+        ) - 1;
+
+    const endY =
+        Math.ceil(
+            (camera.y + H) / TILE
+        ) + 1;
+
+    for (
+        let y = startY;
+        y <= endY;
+        y++
+    ) {
+
+        for (
+            let x = startX;
+            x <= endX;
+            x++
+        ) {
+
+            if (
+                x < 0 ||
+                y < 0 ||
+                x >= MAP_W ||
+                y >= MAP_H
+            ) {
+                continue;
+            }
+
+            const px =
+                x * TILE;
+
+            const py =
+                y * TILE;
+
+            if (
+                MAP[y][x] === "#"
+            ) {
+
+                ctx.fillStyle =
+                    "#151515";
+
+                ctx.fillRect(
+                    px,
+                    py,
+                    TILE,
+                    TILE
+                );
+
+                ctx.strokeStyle =
+                    "#202020";
+
+                ctx.strokeRect(
+                    px + .5,
+                    py + .5,
+                    TILE - 1,
+                    TILE - 1
+                );
+
+            }
+
+            else {
+
+                ctx.fillStyle =
+                    "#303030";
+
+                ctx.fillRect(
+                    px,
+                    py,
+                    TILE,
+                    TILE
+                );
+
+                ctx.strokeStyle =
+                    "#353535";
+
+                ctx.strokeRect(
+                    px + .5,
+                    py + .5,
+                    TILE - 1,
+                    TILE - 1
+                );
+
+                // floor details
+
+                if (
+                    (x * 17 + y * 31) % 9 === 0
+                ) {
+
+                    ctx.fillStyle =
+                        "#282828";
+
+                    ctx.fillRect(
+                        px + 12,
+                        py + 21,
+                        2,
+                        2
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// OBJECTS
+// ============================================================
+
+function drawObjects() {
+
+    // key
+
+    if (
+        !keyItem.collected
+    ) {
+
+        ctx.save();
+
+        ctx.translate(
+            keyItem.x,
+            keyItem.y
+        );
+
+        ctx.rotate(
+            Math.sin(
+                timePlayed * 3
+            ) * .1
+        );
+
+        ctx.strokeStyle =
+            "#b7a65a";
+
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            -8,
+            -3,
+            8,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.stroke();
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            -3
+        );
+
+        ctx.lineTo(
+            22,
+            -3
+        );
+
+        ctx.lineTo(
+            22,
+            4
+        );
+
+        ctx.lineTo(
+            15,
+            4
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+
+    // note
+
+    if (
+        !note.found
+    ) {
+
+        ctx.save();
+
+        ctx.translate(
+            note.x,
+            note.y
+        );
+
+        ctx.fillStyle =
+            "#b7b2a3";
+
+        ctx.fillRect(
+            -16,
+            -20,
+            32,
+            40
+        );
+
+        ctx.strokeStyle =
+            "#666";
+
+        ctx.strokeRect(
+            -16,
+            -20,
+            32,
+            40
+        );
+
+        ctx.strokeStyle =
+            "#777";
+
+        ctx.lineWidth = 2;
+
+        for (
+            let i = -8;
+            i <= 10;
+            i += 8
+        ) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                -10,
+                i
+            );
+
+            ctx.lineTo(
+                10,
+                i
+            );
+
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+
+    // exit door
+
+    ctx.save();
+
+    ctx.translate(
+        exitDoor.x,
+        exitDoor.y
+    );
+
+    if (
+        exitDoor.open
+    ) {
+
+        ctx.fillStyle =
+            "#18251b";
+
+    }
+
+    else {
+
+        ctx.fillStyle =
+            "#253027";
+    }
+
+    ctx.fillRect(
+        -25,
+        -38,
+        50,
+        76
+    );
+
+    ctx.strokeStyle =
+        "#617265";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+        -25,
+        -38,
+        50,
+        76
+    );
+
+    ctx.fillStyle =
+        "#888";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        15,
+        0,
+        4,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+// ============================================================
+// PLAYER
+// ============================================================
+
+function drawPlayer() {
+
+    ctx.save();
+
+    ctx.translate(
+        player.x,
+        player.y
+    );
+
+    ctx.shadowBlur = 15;
+    ctx.shadowColor =
+        "rgba(255,255,255,.15)";
+
+    ctx.fillStyle =
+        "#bdbdbd";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        player.radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle =
+        "#202020";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        -3,
+        6,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+// ============================================================
+// MONSTER DRAW
+// ============================================================
+
+function drawMonster() {
+
+    const d =
+        distance(
+            monster.x,
+            monster.y,
+            player.x,
+            player.y
+        );
+
+    if (
+        d > 850
+    ) {
+        return;
+    }
+
+    ctx.save();
+
+    ctx.translate(
+        monster.x,
+        monster.y
+    );
+
+    const pulse =
+        Math.sin(
+            timePlayed * 5
+        ) * 2;
+
+    ctx.fillStyle =
+        "#171717";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        monster.radius + pulse,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle =
+        "#441b1b";
+
+    ctx.lineWidth = 3;
+
+    ctx.stroke();
+
+    // eyes
+
+    if (
+        d < 600
+    ) {
+
+        ctx.fillStyle =
+            "#b14b4b";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            -7,
+            -4,
+            3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.arc(
+            7,
+            -4,
+            3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+
+// ============================================================
+// DARKNESS
+// ============================================================
+
+function drawDarkness() {
+
+    const px =
+        player.x -
+        camera.x;
+
+    const py =
+        player.y -
+        camera.y;
+
+    let radius =
+        player.flashlight
+            ? 270
+            : 120;
+
+    if (
+        flicker > 0
+    ) {
+
+        radius *=
+            .65 +
+            Math.random() * .35;
+    }
+
+    const gradient =
+        ctx.createRadialGradient(
+            px,
+            py,
+            radius * .15,
+            px,
+            py,
+            radius
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+    gradient.addColorStop(
+        .45,
+        "rgba(0,0,0,.08)"
+    );
+
+    gradient.addColorStop(
+        .72,
+        "rgba(0,0,0,.55)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,.96)"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    // flashlight cone
+
+    if (
+        player.flashlight
+    ) {
+
+        const cone =
+            ctx.createRadialGradient(
+                px,
+                py,
+                20,
+                px,
+                py,
+                430
+            );
+
+        cone.addColorStop(
+            0,
+            "rgba(255,255,255,.08)"
+        );
+
+        cone.addColorStop(
+            .6,
+            "rgba(255,255,255,.015)"
+        );
+
+        cone.addColorStop(
+            1,
+            "rgba(255,255,255,0)"
+        );
+
+        ctx.fillStyle =
+            cone;
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+    }
+}
+
+
+// ============================================================
+// NOISE
+// ============================================================
+
+function drawNoise() {
+
+    noiseElement.style.opacity =
+        String(
+            .025 +
+            Math.random() * .025
+        );
+}
+
+
+// ============================================================
+// GAME END
+// ============================================================
+
+function endGame() {
+
+    if (gameOver) {
+        return;
+    }
+
+    gameOver = true;
+
+    gameOverScreen.style.display =
+        "flex";
+
+    beep(
+        45,
+        1,
+        .08,
+        "sawtooth"
+    );
+}
+
+
+// ============================================================
+// RESET
+// ============================================================
+
+function resetGame() {
+
+    gameStarted = true;
+    gameOver = false;
+    escaped = false;
+    paused = false;
+
+    player.x = 6 * TILE;
+    player.y = 6 * TILE;
+    player.health = 100;
+    player.stamina = 100;
+    player.flashlight = true;
+
+    monster.x = 43 * TILE;
+    monster.y = 43 * TILE;
+    monster.active = false;
+    monster.anger = 0;
+
+    keyItem.collected = false;
+    note.found = false;
+
+    exitDoor.open = false;
+
+    camera.x = 0;
+    camera.y = 0;
+    camera.shake = 0;
+
+    timePlayed = 0;
+    randomEventTimer = 8;
+
+    gameOverScreen.style.display =
+        "none";
+
+    escapeScreen.style.display =
+        "none";
+
+    pauseScreen.style.display =
+        "none";
+
+    interactionElement.style.opacity =
+        "0";
+
+    objectiveElement.innerText =
+        "집 밖으로 나가야 한다.";
+
+    showMessage(
+        "방 안이다. 밖으로 나갈 방법을 찾아야 한다.",
+        4
+    );
+}
+
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+
+window.addEventListener(
+    "keydown",
+    function(e) {
+
+        const key =
+            e.key.toLowerCase();
+
+        if (
+            [
+                "w",
+                "a",
+                "s",
+                "d",
+                "shift",
+                "f",
+                "e",
+                "arrowup",
+                "arrowdown",
+                "arrowleft",
+                "arrowright",
+                " "
+            ].includes(key)
+        ) {
+
+            e.preventDefault();
+        }
+
+        keys[key] = true;
+
+        if (
+            key === "e"
+        ) {
+
+            interact();
+        }
+
+        if (
+            key === "f"
+        ) {
+
+            if (gameStarted) {
+
+                player.flashlight =
+                    !player.flashlight;
+
+                beep(
+                    player.flashlight
+                        ? 500
+                        : 200,
+                    .08,
+                    .025,
+                    "square"
+                );
+            }
+        }
+
+        if (
+            key === " "
+        ) {
+
+            paused =
+                !paused;
+
+            pauseScreen.style.display =
+                paused
+                    ? "flex"
+                    : "none";
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    function(e) {
+
+        keys[
+            e.key.toLowerCase()
+        ] = false;
+    }
+);
+
+
+// ============================================================
+// BUTTONS
+// ============================================================
+
+document
+    .getElementById("startButton")
+    .addEventListener(
+        "click",
+        function() {
+
+            initAudio();
+
+            startScreen.style.display =
+                "none";
+
+            resetGame();
+
+            canvas.focus();
+        }
+    );
+
+document
+    .getElementById("restartButton")
+    .addEventListener(
+        "click",
+        function() {
+
+            initAudio();
+
+            resetGame();
+        }
+    );
+
+document
+    .getElementById("escapeRestartButton")
+    .addEventListener(
+        "click",
+        function() {
+
+            initAudio();
+
+            resetGame();
+        }
+    );
+
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+
+function update(dt) {
+
+    if (
+        !gameStarted ||
+        gameOver ||
+        escaped ||
+        paused
+    ) {
+        return;
+    }
+
+    timePlayed += dt;
+
+    updatePlayer(dt);
+
+    updateMonster(dt);
+
+    updateItems();
+
+    updateCamera(dt);
+
+    updateMessage(dt);
+
+    randomEventTimer -= dt;
+
+    if (
+        randomEventTimer <= 0
+    ) {
+
+        randomEvent();
+
+        randomEventTimer =
+            10 +
+            Math.random() * 15;
+    }
+
+    flicker -= dt;
+
+    if (
+        Math.random() < .002
+    ) {
+
+        flicker = .15;
+    }
+
+    healthElement.style.width =
+        player.health + "%";
+
+    if (
+        player.health < 35
+    ) {
+
+        healthElement.style.background =
+            "#712525";
+
+    }
+
+    else {
+
+        healthElement.style.background =
+            "#777";
+    }
+}
+
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+
+function loop(now) {
+
+    const dt =
+        Math.min(
+            .05,
+            (now - lastTime) / 1000
+        );
+
+    lastTime = now;
+
+    update(dt);
+
+    drawWorld();
+
+    requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+
+</script>
+
+</body>
+</html>
+"""
+
+components.html(
+    GAME_HTML,
+    height=850,
+    scrolling=False
+)
