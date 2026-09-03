@@ -492,19 +492,10 @@ function generateMap() {
     for(let c=0; c<mapSize; c++) {
       if(r===0 || r===mapSize-1 || c===0 || c===mapSize-1) {
         row.push(1);
-      } else if (isMainGame) {
-        // 본 게임: 무작위 장애물 배치로 완전히 다른 방 구조 생성
-        if(Math.random() < 0.14 && !(r === Math.floor(mapSize/2) && c === Math.floor(mapSize/2))) {
-          row.push(1);
-        } else {
-          row.push(0);
-          if(!(r === mapSize-2 && c === mapSize-2)) {
-            freeTiles.push({r, c});
-          }
-        }
       } else {
-        // 튜토리얼: 규칙적인 기둥 격자 구조
-        if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25) {
+        // 본 게임과 튜토리얼 모두 동일한 튜토리얼 스타일의 규칙적인 기둥 격자 구조 적용
+        const mid = Math.floor(mapSize / 2);
+        if(r % 4 === 0 && c % 4 === 0 && Math.random() > 0.25 && !(r === mid && c === mid)) {
           row.push(1);
         } else {
           row.push(0);
@@ -517,10 +508,9 @@ function generateMap() {
     mapData.push(row);
   }
   
-  if (!isMainGame) {
-    mapData[1][1] = 0; mapData[1][2] = 0;
-    mapData[2][1] = 0; mapData[2][2] = 0;
-  }
+  // 시작 좌측 상단 영역 비우기
+  mapData[1][1] = 0; mapData[1][2] = 0;
+  mapData[2][1] = 0; mapData[2][2] = 0;
 
   if (isMainGame) {
     const mid = Math.floor(mapSize / 2);
@@ -579,13 +569,12 @@ function renderMap() {
 }
 
 function resetGameState() {
-  if (isMainGame) {
-    px = (Math.floor(mapSize / 2)) * TILE_SIZE + 20;
-    py = (Math.floor(mapSize / 2)) * TILE_SIZE + 20;
-  } else {
-    px = 100; py = 100;
-  }
-  mx = 11 * TILE_SIZE + 20; my = 11 * TILE_SIZE + 20;
+  // 본 게임 및 튜토리얼 모두 좌측 상단 안전한 위치에서 스폰
+  px = 100; py = 100;
+  
+  mx = (mapSize - 3) * TILE_SIZE + 20; 
+  my = (mapSize - 3) * TILE_SIZE + 20;
+  
   qteHp = 3; keyCount = 0;
   isHidden = false; isChased = false; isQTEActive = false; gameEnded = false;
   stealthTimer = 0;
@@ -631,7 +620,7 @@ function startMainGame() {
   document.getElementById('stageTitle').textContent = "🔥 [본 게임 스테이지]";
   document.getElementById('stageDesc').textContent = "무작위 방 구조와 크기! 나무 문을 열고 새로운 방으로 진입하세요!";
   document.getElementById('stageGoals').innerHTML = `
-    <li><b>무작위 방 구조:</b> 나무 문을 통과할 때마다 완전히 새로운 방 구조와 크기가 생성됩니다.</li>
+    <li><b>기둥 격자 방 구조:</b> 튜토리얼과 동일한 깔끔한 기둥 구조로 방이 생성됩니다.</li>
     <li><b>나무 문:</b> 맵 네 변 테두리의 정중앙에 위치하며, 벽을 뚫고 설치되어 있습니다.</li>
     <li><b>목표:</b> 숨겨진 <b>열쇠(${targetKeys}개)</b>를 모두 수집하세요!</li>
     <li><b>탈출:</b> 열쇠를 모은 뒤 EXIT 문을 통해 최종 탈출하세요.</li>
