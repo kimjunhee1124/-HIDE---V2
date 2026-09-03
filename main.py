@@ -8,18 +8,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ============================================================
-# THE EMPTY HOUSE
-# Real-time WASD Horror Game
-# Single-file Streamlit Application
-# ============================================================
-
 GAME_HTML = r"""
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 
@@ -34,393 +28,510 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #000;
-    font-family: Arial, "Malgun Gothic", sans-serif;
-    user-select: none;
+    background: #050507;
+    font-family:
+        "Courier New",
+        "Noto Sans KR",
+        monospace;
 }
 
 body {
-    color: #ddd;
+    user-select: none;
 }
 
 #gameWrapper {
-    position: fixed;
-    inset: 0;
-    background: #000;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    min-height: 700px;
     overflow: hidden;
+    background: #050507;
 }
 
-#gameCanvas {
+canvas {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background: #090909;
-    cursor: crosshair;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #050507;
 }
 
-#hud {
+/* =========================================================
+   START SCREEN
+   ========================================================= */
+
+#startScreen {
     position: absolute;
     inset: 0;
-    pointer-events: none;
-}
-
-#topLeft {
-    position: absolute;
-    left: 22px;
-    top: 20px;
-    color: #aaa;
-    font-size: 14px;
-    text-shadow: 0 2px 4px #000;
-}
-
-#healthOuter {
-    width: 180px;
-    height: 9px;
-    margin-top: 7px;
-    border: 1px solid #555;
-    background: #111;
-}
-
-#healthInner {
-    width: 100%;
-    height: 100%;
-    background: #777;
-    transition: width .15s;
-}
-
-#objective {
-    position: absolute;
-    right: 22px;
-    top: 20px;
-    text-align: right;
-    color: #aaa;
-    font-size: 14px;
-    text-shadow: 0 2px 4px #000;
-}
-
-#interaction {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 18px;
-    background: rgba(0,0,0,.75);
-    border: 1px solid #555;
-    color: #ddd;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity .15s;
-}
-
-#message {
-    position: absolute;
-    bottom: 25px;
-    left: 50%;
-    transform: translateX(-50%);
-    min-width: 300px;
-    max-width: 700px;
-    text-align: center;
-    color: #bbb;
-    font-size: 15px;
-    text-shadow: 0 2px 5px #000;
-    opacity: 0;
-    transition: opacity .25s;
-}
-
-#centerText {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    pointer-events: none;
-}
-
-#centerText .big {
-    font-size: 54px;
-    letter-spacing: 12px;
-    font-weight: bold;
-}
-
-#centerText .small {
-    margin-top: 15px;
-    color: #999;
-    font-size: 15px;
-    letter-spacing: 3px;
-}
-
-#startScreen,
-#gameOverScreen,
-#escapeScreen {
-    position: absolute;
-    inset: 0;
+    z-index: 100;
     display: flex;
     justify-content: center;
     align-items: center;
     background:
         radial-gradient(
             circle at center,
-            rgba(35,35,35,.55),
-            rgba(0,0,0,.98)
+            rgba(30, 30, 35, 0.30) 0%,
+            rgba(5, 5, 7, 0.92) 58%,
+            rgba(0, 0, 0, 0.98) 100%
         );
-    z-index: 20;
+    transition:
+        opacity 0.8s ease,
+        visibility 0.8s ease;
 }
 
-.screenBox {
-    width: min(700px, 90%);
+#startScreen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.startBox {
+    width: min(760px, 90vw);
+    padding: 58px 60px 52px;
     text-align: center;
+    border: 1px solid rgba(180, 180, 190, 0.15);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(12, 12, 16, 0.94),
+            rgba(5, 5, 8, 0.97)
+        );
+    box-shadow:
+        0 0 80px rgba(0, 0, 0, 0.8),
+        inset 0 0 60px rgba(255, 255, 255, 0.015);
 }
 
-.title {
+.logoSmall {
+    color: #666670;
+    font-size: 12px;
+    letter-spacing: 7px;
+    margin-bottom: 26px;
+}
+
+.gameTitle {
+    margin: 0;
+    color: #eeeeee;
     font-size: clamp(42px, 7vw, 82px);
-    font-weight: 900;
-    letter-spacing: 14px;
-    color: #ddd;
+    font-weight: 700;
+    letter-spacing: 8px;
+    line-height: 1;
     text-shadow:
-        0 0 5px #fff2,
-        0 0 30px #000;
+        0 0 12px rgba(255,255,255,0.08),
+        0 0 40px rgba(255,255,255,0.03);
 }
 
-.subtitle {
-    margin-top: 12px;
-    color: #666;
+.gameSubtitle {
+    margin-top: 18px;
+    color: #8b8b94;
+    font-size: clamp(12px, 1.6vw, 16px);
     letter-spacing: 5px;
+}
+
+.storyText {
+    margin: 48px auto 36px;
+    max-width: 590px;
+    color: #73737d;
     font-size: 13px;
+    line-height: 2.05;
+    letter-spacing: 1px;
 }
 
-.story {
-    margin: 45px auto 30px;
-    max-width: 570px;
+.storyText strong {
+    color: #aaaab2;
+    font-weight: normal;
+}
+
+.startButton {
+    position: relative;
+    width: 230px;
+    height: 58px;
+    border: 1px solid #3f3f48;
+    outline: none;
+    background: #111116;
+    color: #d9d9de;
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 5px;
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        transform 0.2s;
+}
+
+.startButton:hover {
+    background: #1a1a20;
+    border-color: #777780;
+    transform: translateY(-2px);
+}
+
+.startButton:active {
+    transform: translateY(0);
+}
+
+.controlsText {
+    margin-top: 30px;
+    color: #4f4f58;
+    font-size: 10px;
+    letter-spacing: 2px;
     line-height: 2;
-    color: #aaa;
-    font-size: 15px;
 }
 
-button {
-    border: 1px solid #555;
-    background: #111;
-    color: #ccc;
-    padding: 13px 35px;
-    font-size: 15px;
+/* =========================================================
+   HUD
+   ========================================================= */
+
+#hud {
+    position: absolute;
+    z-index: 20;
+    left: 22px;
+    top: 20px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+#hud.visible {
+    opacity: 1;
+}
+
+.hudTitle {
+    color: #777780;
+    font-size: 10px;
+    letter-spacing: 3px;
+    margin-bottom: 7px;
+}
+
+.barContainer {
+    width: 180px;
+    height: 7px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 8px;
+}
+
+.bar {
+    height: 100%;
+    width: 100%;
+    transition: width 0.15s linear;
+}
+
+#healthBar {
+    background: #aaaab0;
+}
+
+#staminaBar {
+    background: #696972;
+}
+
+.hudHint {
+    margin-top: 15px;
+    color: #5a5a63;
+    font-size: 9px;
+    letter-spacing: 1px;
+    line-height: 1.8;
+}
+
+#objective {
+    position: absolute;
+    z-index: 20;
+    top: 22px;
+    right: 24px;
+    color: #777780;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-align: right;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+#objective.visible {
+    opacity: 1;
+}
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+#messageBox {
+    position: absolute;
+    z-index: 30;
+    left: 50%;
+    bottom: 60px;
+    transform: translateX(-50%);
+    width: min(620px, 80vw);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#messageBox.visible {
+    opacity: 1;
+}
+
+#message {
+    display: inline-block;
+    padding: 12px 20px;
+    color: #b6b6bd;
+    background: rgba(5,5,8,0.84);
+    border: 1px solid rgba(160,160,170,0.12);
+    font-size: 11px;
+    letter-spacing: 1px;
+    line-height: 1.7;
+}
+
+/* =========================================================
+   INTERACTION
+   ========================================================= */
+
+#interaction {
+    position: absolute;
+    z-index: 25;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    color: #a5a5ad;
+    font-size: 10px;
+    letter-spacing: 2px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#interaction.visible {
+    opacity: 1;
+}
+
+/* =========================================================
+   GAME OVER / END
+   ========================================================= */
+
+#endScreen {
+    position: absolute;
+    inset: 0;
+    z-index: 90;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(20,20,24,0.65),
+            rgba(0,0,0,0.97)
+        );
+}
+
+#endScreen.visible {
+    display: flex;
+}
+
+.endBox {
+    text-align: center;
+    width: min(650px, 88vw);
+}
+
+.endTitle {
+    color: #dddde2;
+    font-size: clamp(38px, 6vw, 68px);
+    letter-spacing: 9px;
+    margin-bottom: 20px;
+}
+
+.endText {
+    color: #6f6f78;
+    font-size: 12px;
+    letter-spacing: 2px;
+    line-height: 2;
+    margin-bottom: 35px;
+}
+
+.restartButton {
+    width: 190px;
+    height: 50px;
+    border: 1px solid #3e3e46;
+    background: #101015;
+    color: #aaaab2;
+    font-family: inherit;
+    letter-spacing: 3px;
     cursor: pointer;
 }
 
-button:hover {
-    background: #222;
-    color: white;
+.restartButton:hover {
+    background: #18181e;
+    border-color: #686870;
 }
 
-.controls {
-    margin-top: 25px;
-    color: #555;
-    font-size: 12px;
-    line-height: 2;
-}
-
-#gameOverScreen,
-#escapeScreen {
-    display: none;
-}
-
-#gameOverScreen .title {
-    color: #722020;
-}
-
-#escapeScreen .title {
-    color: #9aa99d;
-}
+/* =========================================================
+   VIGNETTE
+   ========================================================= */
 
 #vignette {
     position: absolute;
     inset: 0;
+    z-index: 10;
     pointer-events: none;
     background:
         radial-gradient(
-            circle,
-            transparent 25%,
-            rgba(0,0,0,.15) 50%,
-            rgba(0,0,0,.75) 100%
+            ellipse at center,
+            transparent 38%,
+            rgba(0,0,0,0.18) 62%,
+            rgba(0,0,0,0.70) 100%
         );
-    z-index: 5;
 }
 
-#redOverlay {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: rgba(90,0,0,0);
-    z-index: 6;
-}
+/* =========================================================
+   NOISE
+   ========================================================= */
 
-#noise {
+#noiseOverlay {
     position: absolute;
     inset: 0;
+    z-index: 11;
     pointer-events: none;
-    z-index: 7;
-    opacity: 0;
+    opacity: 0.04;
     background-image:
         repeating-linear-gradient(
             0deg,
-            rgba(255,255,255,.025) 0px,
-            rgba(255,255,255,.025) 1px,
+            rgba(255,255,255,0.15) 0px,
+            rgba(255,255,255,0.15) 1px,
             transparent 1px,
-            transparent 4px
+            transparent 3px
         );
-}
-
-#pauseScreen {
-    position: absolute;
-    inset: 0;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0,0,0,.75);
-    z-index: 15;
-}
-
-.pauseText {
-    color: #aaa;
-    font-size: 25px;
-    letter-spacing: 8px;
+    mix-blend-mode: screen;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <div id="gameWrapper">
 
-<canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
-<div id="hud">
+    <div id="vignette"></div>
+    <div id="noiseOverlay"></div>
 
-    <div id="topLeft">
-        체력
-        <div id="healthOuter">
-            <div id="healthInner"></div>
+    <!-- START -->
+    <div id="startScreen">
+
+        <div class="startBox">
+
+            <div class="logoSmall">
+                A SMALL HORROR GAME
+            </div>
+
+            <h1 class="gameTitle">
+                THE EMPTY HOUSE
+            </h1>
+
+            <div class="gameSubtitle">
+                SOMETHING IS STILL INSIDE
+            </div>
+
+            <div class="storyText">
+                밤이 되자 아무도 살지 않는 집에 불이 켜졌다.<br>
+                이상하다고 생각한 <strong>학생</strong>은 집 안으로 들어간다.<br><br>
+
+                처음에는 아무것도 없었다.<br>
+                하지만 깊숙한 곳으로 들어갈수록<br>
+                <strong>누군가 자신을 따라오고 있다는 느낌</strong>이 들기 시작한다.<br><br>
+
+                열쇠를 찾아 현관으로 돌아가야 한다.
+            </div>
+
+            <button class="startButton" id="startButton">
+                게임 시작
+            </button>
+
+            <div class="controlsText">
+                WASD / 방향키 : 이동 &nbsp;&nbsp; SHIFT : 달리기<br>
+                F : 손전등 &nbsp;&nbsp; E : 조사
+            </div>
+
         </div>
+
     </div>
 
+    <!-- HUD -->
+    <div id="hud">
+
+        <div class="hudTitle">
+            CONDITION
+        </div>
+
+        <div class="barContainer">
+            <div id="healthBar" class="bar"></div>
+        </div>
+
+        <div class="barContainer">
+            <div id="staminaBar" class="bar"></div>
+        </div>
+
+        <div class="hudHint">
+            HP<br>
+            STAMINA
+        </div>
+
+    </div>
+
+    <!-- OBJECTIVE -->
     <div id="objective">
-        <div id="objectiveText">
-            집 밖으로 나가야 한다.
-        </div>
+        OBJECTIVE<br>
+        <span id="objectiveText">
+            집 안을 조사하라
+        </span>
     </div>
 
+    <!-- MESSAGE -->
+    <div id="messageBox">
+        <div id="message"></div>
+    </div>
+
+    <!-- INTERACTION -->
     <div id="interaction">
-        E
+        [ E ] 조사하기
     </div>
 
-    <div id="message"></div>
+    <!-- END -->
+    <div id="endScreen">
 
-</div>
+        <div class="endBox">
 
-<div id="vignette"></div>
-<div id="redOverlay"></div>
-<div id="noise"></div>
+            <div class="endTitle" id="endTitle">
+                YOU ESCAPED
+            </div>
 
-<div id="startScreen">
+            <div class="endText" id="endText">
+                문이 열렸다.<br>
+                그리고 뒤를 돌아보지 않았다.
+            </div>
 
-    <div class="screenBox">
+            <button class="restartButton" id="restartButton">
+                다시 시작
+            </button>
 
-        <div class="title">
-            THE EMPTY HOUSE
-        </div>
-
-        <div class="subtitle">
-            SOMETHING IS STILL INSIDE
-        </div>
-
-        <div class="story">
-
-            새벽 2시 17분.<br>
-            정신을 차리자 낯선 집 안에 있었다.<br>
-            휴대폰은 작동하지 않는다.<br>
-            현관문은 잠겨 있다.<br><br>
-
-            그리고 어딘가에서<br>
-            발소리가 들린다.
-
-        </div>
-
-        <button id="startButton">
-            게임 시작
-        </button>
-
-        <div class="controls">
-            WASD — 이동<br>
-            E — 상호작용<br>
-            SHIFT — 달리기<br>
-            F — 손전등
         </div>
 
     </div>
 
-</div>
-
-<div id="gameOverScreen">
-
-    <div class="screenBox">
-
-        <div class="title">
-            CAUGHT
-        </div>
-
-        <div class="story">
-            뒤에서 들리던 발소리가 멈췄다.<br><br>
-            너무 조용하다.
-        </div>
-
-        <button id="restartButton">
-            다시 시작
-        </button>
-
-    </div>
-
-</div>
-
-<div id="escapeScreen">
-
-    <div class="screenBox">
-
-        <div class="title">
-            ESCAPED
-        </div>
-
-        <div class="story">
-            문이 열렸다.<br><br>
-            차가운 공기가 들어온다.<br><br>
-            당신은 집 밖으로 나왔다.<br><br>
-            하지만 2층 창문을 바라본 순간,
-            누군가 서 있는 것이 보였다.
-        </div>
-
-        <button id="escapeRestartButton">
-            다시 시작
-        </button>
-
-    </div>
-
-</div>
-
-<div id="pauseScreen">
-    <div class="pauseText">
-        PAUSED
-    </div>
 </div>
 
 <script>
 
-// ============================================================
-// CANVAS
-// ============================================================
+/* =========================================================
+   CANVAS
+   ========================================================= */
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
+ctx.imageSmoothingEnabled = false;
 
 let W = window.innerWidth;
 let H = window.innerHeight;
@@ -430,75 +541,124 @@ function resizeCanvas() {
     W = window.innerWidth;
     H = window.innerHeight;
 
-    canvas.width = W;
-    canvas.height = H;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
 }
 
 window.addEventListener("resize", resizeCanvas);
-
 resizeCanvas();
 
 
-// ============================================================
-// GAME CONSTANTS
-// ============================================================
+/* =========================================================
+   DOM
+   ========================================================= */
+
+const startScreen = document.getElementById("startScreen");
+const startButton = document.getElementById("startButton");
+
+const hud = document.getElementById("hud");
+const objective = document.getElementById("objective");
+const objectiveText = document.getElementById("objectiveText");
+
+const messageBox = document.getElementById("messageBox");
+const message = document.getElementById("message");
+
+const interaction = document.getElementById("interaction");
+
+const healthBar = document.getElementById("healthBar");
+const staminaBar = document.getElementById("staminaBar");
+
+const endScreen = document.getElementById("endScreen");
+const endTitle = document.getElementById("endTitle");
+const endText = document.getElementById("endText");
+const restartButton = document.getElementById("restartButton");
+
+
+/* =========================================================
+   GAME CONSTANTS
+   ========================================================= */
 
 const TILE = 64;
+
+const PLAYER_RADIUS = 14;
+
+const BASE_SPEED = 185;
+
+const SPRINT_SPEED = 300;
+
+const MONSTER_SPEED = 75;
+
+const MONSTER_CHASE_SPEED = 145;
+
+const WORLD_WIDTH = 60 * TILE;
+
+const WORLD_HEIGHT = 60 * TILE;
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
 
 const MAP = [
 
 "############################################################",
 "#..........................................................#",
 "#..........................................................#",
-"#..........................................................#",
-"#..............###########.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............#.........#.................................#",
-"#..............###########.................................#",
+"#....#########.........................#########...........#",
+"#....#.......#.........................#.......#...........#",
+"#....#.......#.............########....#.......#...........#",
+"#....#.......#...................#.....#.......#...........#",
+"#....#.......#####...............#.....#.......#####.......#",
+"#....#.........................#.......#...................#",
+"#....#.........................#.......#...................#",
+"#....###########...............#.......###########.........#",
 "#..........................................................#",
 "#..........................................................#",
-"#........#######################...........................#",
-"#........#.....................#...........................#",
-"#........#.....................#...........................#",
-"#........#.....................#...........................#",
-"#........#.....................#...........................#",
-"#........#.....................#...........................#",
-"#........#.....................#...........................#",
-"#........#######################...........................#",
+"#...............############...............................#",
+"#...............#..........#...............................#",
+"#...............#..........#....................########...#",
+"#...............#..........#....................#......#...#",
+"#...............#..........#....................#......#...#",
+"#...............#..........##############.......#......#...#",
+"#...............#........................#.......#......#...#",
+"#...............#........................#.......#......#...#",
+"#...............##########################.......########...#",
 "#..........................................................#",
 "#..........................................................#",
+"#.........########.........................................#",
+"#.........#......#.........................................#",
+"#.........#......#.........................................#",
+"#.........#......#...............#########.................#",
+"#.........#......#...............#.......#.................#",
+"#.........########...............#.......#.................#",
+"#...............................#.......#................#",
+"#...............................#########..................#",
 "#..........................................................#",
 "#..........................................................#",
-"#....................###########...........................#",
-"#....................#.........#...........................#",
-"#....................#.........#...........................#",
-"#....................#.........#...........................#",
-"#....................#.........#...........................#",
-"#....................#.........#...........................#",
-"#....................#.........#...........................#",
-"#....................###########...........................#",
+"#.................#########................................#",
+"#.................#.......#................................#",
+"#.................#.......#................................#",
+"#.................#.......#..........############..........#",
+"#.................#.......#..........#..........#..........#",
+"#.................#########..........#..........#..........#",
+"#...................................#..........#..........#",
+"#...................................#..........#..........#",
+"#...................................############..........#",
 "#..........................................................#",
 "#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
-"#..........................................................#",
+"#.............................############.................#",
+"#.............................#..........#.................#",
+"#.............................#..........#.................#",
+"#.............................#..........#.................#",
+"#.............................############.................#",
 "#..........................................................#",
 "#..........................................................#",
 "#..........................................................#",
@@ -510,398 +670,320 @@ const MAP = [
 
 ];
 
-const MAP_H = MAP.length;
-const MAP_W = MAP[0].length;
 
-const WORLD_W = MAP_W * TILE;
-const WORLD_H = MAP_H * TILE;
+/* =========================================================
+   MAP HELPERS
+   ========================================================= */
 
+function isWallAt(tx, ty) {
 
-// ============================================================
-// GAME STATE
-// ============================================================
-
-let gameStarted = false;
-let gameOver = false;
-let escaped = false;
-let paused = false;
-
-let keys = {};
-
-let player = {
-    x: 6 * TILE,
-    y: 6 * TILE,
-    radius: 15,
-    speed: 180,
-    health: 100,
-    flashlight: true,
-    stamina: 100
-};
-
-let monster = {
-    x: 43 * TILE,
-    y: 43 * TILE,
-    radius: 22,
-    speed: 78,
-    chaseSpeed: 145,
-    active: false,
-    anger: 0
-};
-
-let keyItem = {
-    x: 12 * TILE,
-    y: 46 * TILE,
-    collected: false
-};
-
-let exitDoor = {
-    x: 56 * TILE,
-    y: 3 * TILE,
-    radius: 30,
-    open: false
-};
-
-let note = {
-    x: 30 * TILE,
-    y: 20 * TILE,
-    found: false
-};
-
-let camera = {
-    x: 0,
-    y: 0,
-    shake: 0
-};
-
-let timePlayed = 0;
-let lastTime = performance.now();
-
-let messageTimer = 0;
-let randomEventTimer = 8;
-
-let footstepTimer = 0;
-let heartbeatTimer = 0;
-
-let flicker = 0;
-
-
-// ============================================================
-// AUDIO
-// ============================================================
-
-let audioContext = null;
-
-function initAudio() {
-
-    if (!audioContext) {
-
-        try {
-            audioContext =
-                new (window.AudioContext ||
-                window.webkitAudioContext)();
-        }
-
-        catch (e) {
-            audioContext = null;
-        }
-    }
-}
-
-function beep(
-    frequency,
-    duration,
-    volume,
-    type = "sine"
-) {
-
-    if (!audioContext) return;
-
-    try {
-
-        const oscillator =
-            audioContext.createOscillator();
-
-        const gain =
-            audioContext.createGain();
-
-        oscillator.type = type;
-
-        oscillator.frequency.value =
-            frequency;
-
-        gain.gain.setValueAtTime(
-            volume,
-            audioContext.currentTime
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            audioContext.currentTime + duration
-        );
-
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-
-        oscillator.start();
-
-        oscillator.stop(
-            audioContext.currentTime + duration
-        );
+    if (ty < 0 || ty >= MAP.length) {
+        return true;
     }
 
-    catch (e) {}
-
-}
-
-
-// ============================================================
-// UI
-// ============================================================
-
-const startScreen =
-    document.getElementById("startScreen");
-
-const gameOverScreen =
-    document.getElementById("gameOverScreen");
-
-const escapeScreen =
-    document.getElementById("escapeScreen");
-
-const pauseScreen =
-    document.getElementById("pauseScreen");
-
-const messageElement =
-    document.getElementById("message");
-
-const interactionElement =
-    document.getElementById("interaction");
-
-const objectiveElement =
-    document.getElementById("objectiveText");
-
-const healthElement =
-    document.getElementById("healthInner");
-
-const redOverlay =
-    document.getElementById("redOverlay");
-
-const noiseElement =
-    document.getElementById("noise");
-
-
-// ============================================================
-// MESSAGES
-// ============================================================
-
-function showMessage(text, duration = 3) {
-
-    messageElement.innerHTML = text;
-
-    messageElement.style.opacity = "1";
-
-    messageTimer = duration;
-}
-
-function updateMessage(dt) {
-
-    if (messageTimer > 0) {
-
-        messageTimer -= dt;
-
-        if (messageTimer <= 0) {
-            messageElement.style.opacity = "0";
-        }
-    }
-}
-
-
-// ============================================================
-// MAP COLLISION
-// ============================================================
-
-function isWall(tx, ty) {
-
-    if (
-        tx < 0 ||
-        ty < 0 ||
-        tx >= MAP_W ||
-        ty >= MAP_H
-    ) {
+    if (tx < 0 || tx >= MAP[ty].length) {
         return true;
     }
 
     return MAP[ty][tx] === "#";
 }
 
+
+function worldToTile(x, y) {
+
+    return {
+        x: Math.floor(x / TILE),
+        y: Math.floor(y / TILE)
+    };
+
+}
+
+
 function circleHitsWall(x, y, radius) {
 
-    const left =
-        Math.floor((x - radius) / TILE);
+    const points = [
+        [x - radius, y],
+        [x + radius, y],
+        [x, y - radius],
+        [x, y + radius],
 
-    const right =
-        Math.floor((x + radius) / TILE);
+        [x - radius * 0.7, y - radius * 0.7],
+        [x + radius * 0.7, y - radius * 0.7],
+        [x - radius * 0.7, y + radius * 0.7],
+        [x + radius * 0.7, y + radius * 0.7]
+    ];
 
-    const top =
-        Math.floor((y - radius) / TILE);
+    for (const p of points) {
 
-    const bottom =
-        Math.floor((y + radius) / TILE);
+        const tile = worldToTile(p[0], p[1]);
 
-    for (
-        let ty = top;
-        ty <= bottom;
-        ty++
-    ) {
-
-        for (
-            let tx = left;
-            tx <= right;
-            tx++
-        ) {
-
-            if (isWall(tx, ty)) {
-
-                const rx = tx * TILE;
-                const ry = ty * TILE;
-
-                const closestX =
-                    Math.max(
-                        rx,
-                        Math.min(x, rx + TILE)
-                    );
-
-                const closestY =
-                    Math.max(
-                        ry,
-                        Math.min(y, ry + TILE)
-                    );
-
-                const dx =
-                    x - closestX;
-
-                const dy =
-                    y - closestY;
-
-                if (
-                    dx * dx +
-                    dy * dy <
-                    radius * radius
-                ) {
-                    return true;
-                }
-            }
+        if (isWallAt(tile.x, tile.y)) {
+            return true;
         }
+
     }
 
     return false;
 }
 
 
-function moveWithCollision(
-    object,
-    dx,
-    dy
-) {
+function tryMove(entity, dx, dy) {
 
-    const nx = object.x + dx;
+    const nextX = entity.x + dx;
 
-    if (
-        !circleHitsWall(
-            nx,
-            object.y,
-            object.radius
-        )
-    ) {
-        object.x = nx;
+    if (!circleHitsWall(nextX, entity.y, entity.radius)) {
+        entity.x = nextX;
     }
 
-    const ny = object.y + dy;
+    const nextY = entity.y + dy;
 
-    if (
-        !circleHitsWall(
-            object.x,
-            ny,
-            object.radius
-        )
-    ) {
-        object.y = ny;
+    if (!circleHitsWall(entity.x, nextY, entity.radius)) {
+        entity.y = nextY;
     }
 }
 
 
-// ============================================================
-// DISTANCE
-// ============================================================
+/* =========================================================
+   PLAYER
+   ========================================================= */
 
-function distance(
-    x1,
-    y1,
-    x2,
-    y2
-) {
+const player = {
 
-    const dx = x2 - x1;
-    const dy = y2 - y1;
+    x: 6 * TILE + TILE / 2,
+    y: 6 * TILE + TILE / 2,
 
-    return Math.sqrt(
-        dx * dx + dy * dy
+    radius: PLAYER_RADIUS,
+
+    health: 100,
+
+    stamina: 100,
+
+    flashlight: true,
+
+    moving: false,
+
+    sprinting: false,
+
+    lastDX: 0,
+
+    lastDY: 1,
+
+    animTime: 0,
+
+    bob: 0
+
+};
+
+
+/* =========================================================
+   MONSTER
+   ========================================================= */
+
+const monster = {
+
+    x: 43 * TILE + TILE / 2,
+    y: 43 * TILE + TILE / 2,
+
+    radius: 18,
+
+    active: false,
+
+    speed: MONSTER_SPEED,
+
+    animTime: 0,
+
+    visibleAmount: 0
+
+};
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+const keyItem = {
+
+    x: 12 * TILE + TILE / 2,
+
+    y: 46 * TILE + TILE / 2,
+
+    collected: false,
+
+    pulse: 0
+
+};
+
+
+const exitDoor = {
+
+    x: 56 * TILE + TILE / 2,
+
+    y: 3 * TILE + TILE / 2,
+
+    open: false
+
+};
+
+
+const note = {
+
+    x: 30 * TILE + TILE / 2,
+
+    y: 20 * TILE + TILE / 2,
+
+    read: false
+
+};
+
+
+/* =========================================================
+   CAMERA
+   ========================================================= */
+
+const camera = {
+
+    x: 0,
+
+    y: 0,
+
+    shake: 0
+
+};
+
+
+function updateCamera() {
+
+    const targetX = player.x - W / 2;
+
+    const targetY = player.y - H / 2;
+
+    camera.x += (targetX - camera.x) * 0.10;
+
+    camera.y += (targetY - camera.y) * 0.10;
+
+    camera.x = Math.max(
+        0,
+        Math.min(
+            WORLD_WIDTH - W,
+            camera.x
+        )
     );
+
+    camera.y = Math.max(
+        0,
+        Math.min(
+            WORLD_HEIGHT - H,
+            camera.y
+        )
+    );
+
 }
 
 
-// ============================================================
-// LINE OF SIGHT
-// ============================================================
+/* =========================================================
+   INPUT
+   ========================================================= */
 
-function hasLineOfSight(
-    x1,
-    y1,
-    x2,
-    y2
-) {
+const keys = {};
 
-    const d =
-        distance(
-            x1,
-            y1,
-            x2,
-            y2
-        );
+window.addEventListener("keydown", function(e) {
 
-    const steps =
-        Math.ceil(d / 18);
+    keys[e.key.toLowerCase()] = true;
 
-    for (
-        let i = 0;
-        i <= steps;
-        i++
+    if (
+        e.key.toLowerCase() === "w" ||
+        e.key.toLowerCase() === "a" ||
+        e.key.toLowerCase() === "s" ||
+        e.key.toLowerCase() === "d" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === " "
     ) {
-
-        const t = i / steps;
-
-        const x =
-            x1 + (x2 - x1) * t;
-
-        const y =
-            y1 + (y2 - y1) * t;
-
-        if (
-            isWall(
-                Math.floor(x / TILE),
-                Math.floor(y / TILE)
-            )
-        ) {
-            return false;
-        }
+        e.preventDefault();
     }
 
-    return true;
+});
+
+
+window.addEventListener("keyup", function(e) {
+
+    keys[e.key.toLowerCase()] = false;
+
+});
+
+
+/* =========================================================
+   GAME STATE
+   ========================================================= */
+
+let gameStarted = false;
+
+let gameEnded = false;
+
+let escaped = false;
+
+let gameTime = 0;
+
+let lastTime = 0;
+
+let messageTimer = 0;
+
+let randomEventTimer = 0;
+
+let monsterRevealTimer = 0;
+
+let flashTimer = 0;
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+function showMessage(text, duration = 2500) {
+
+    message.textContent = text;
+
+    messageBox.classList.add("visible");
+
+    messageTimer = duration;
+
 }
 
 
-// ============================================================
-// PLAYER
-// ============================================================
+function updateMessage(dt) {
+
+    if (messageTimer > 0) {
+
+        messageTimer -= dt * 1000;
+
+        if (messageTimer <= 0) {
+            messageBox.classList.remove("visible");
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DISTANCE
+   ========================================================= */
+
+function distance(a, b) {
+
+    return Math.hypot(
+        a.x - b.x,
+        a.y - b.y
+    );
+
+}
+
+
+/* =========================================================
+   PLAYER UPDATE
+   ========================================================= */
 
 function updatePlayer(dt) {
 
@@ -924,594 +1006,1438 @@ function updatePlayer(dt) {
         dx += 1;
     }
 
-    const moving =
-        dx !== 0 || dy !== 0;
+    const moving = dx !== 0 || dy !== 0;
+
+    player.moving = moving;
 
     if (moving) {
 
-        const length =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
-            );
+        const length = Math.hypot(dx, dy);
 
         dx /= length;
         dy /= length;
 
-        let currentSpeed =
-            player.speed;
+        player.lastDX = dx;
+        player.lastDY = dy;
 
-        if (
-            keys["shift"] &&
-            player.stamina > 0
-        ) {
-
-            currentSpeed = 285;
-
-            player.stamina -=
-                35 * dt;
-
-        }
-
-        else {
-
-            player.stamina +=
-                20 * dt;
-        }
-
-        player.stamina =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    player.stamina
-                )
-            );
-
-        moveWithCollision(
-            player,
-            dx * currentSpeed * dt,
-            dy * currentSpeed * dt
+        player.animTime += dt * (
+            keys["shift"] && player.stamina > 0
+                ? 12
+                : 8
         );
 
-        footstepTimer -= dt;
-
-        if (
-            footstepTimer <= 0
-        ) {
-
-            beep(
-                90 + Math.random() * 20,
-                .05,
-                .025,
-                "square"
-            );
-
-            footstepTimer =
-                keys["shift"]
-                    ? .22
-                    : .34;
-        }
     }
 
-    else {
+    let sprint = false;
 
-        player.stamina +=
-            30 * dt;
-
-        player.stamina =
-            Math.min(
-                100,
-                player.stamina
-            );
-
-        footstepTimer = 0;
+    if (
+        moving &&
+        keys["shift"] &&
+        player.stamina > 0
+    ) {
+        sprint = true;
     }
+
+    player.sprinting = sprint;
+
+    let speed = BASE_SPEED;
+
+    if (sprint) {
+
+        speed = SPRINT_SPEED;
+
+        player.stamina -= 32 * dt;
+
+    } else {
+
+        player.stamina += 20 * dt;
+
+    }
+
+    player.stamina = Math.max(
+        0,
+        Math.min(100, player.stamina)
+    );
+
+    if (moving) {
+
+        tryMove(
+            player,
+            dx * speed * dt,
+            dy * speed * dt
+        );
+
+    }
+
+    player.bob = moving
+        ? Math.sin(player.animTime * 1.5) * 1.4
+        : 0;
+
 }
 
 
-// ============================================================
-// MONSTER
-// ============================================================
+/* =========================================================
+   MONSTER UPDATE
+   ========================================================= */
 
 function updateMonster(dt) {
 
-    const d =
-        distance(
-            monster.x,
-            monster.y,
-            player.x,
-            player.y
-        );
-
     if (!monster.active) {
-
-        if (
-            d < 550 ||
-            timePlayed > 18
-        ) {
-
-            monster.active = true;
-
-            showMessage(
-                "어딘가에서 발소리가 들린다.",
-                3
-            );
-
-            beep(
-                55,
-                .8,
-                .05,
-                "sawtooth"
-            );
-        }
-
         return;
     }
 
-    let targetSpeed =
-        monster.speed;
+    monster.animTime += dt * 7;
 
-    if (d < 650) {
+    const dx = player.x - monster.x;
 
-        targetSpeed =
-            monster.chaseSpeed;
+    const dy = player.y - monster.y;
 
-        monster.anger +=
-            dt;
-    }
+    const dist = Math.hypot(dx, dy);
 
-    else {
+    if (dist > 1) {
 
-        targetSpeed =
-            monster.speed;
-    }
+        let speed = monster.speed;
 
-    let dx =
-        player.x - monster.x;
+        if (dist < 650) {
+            speed = MONSTER_CHASE_SPEED;
+        }
 
-    let dy =
-        player.y - monster.y;
+        if (dist < 300) {
+            speed = MONSTER_CHASE_SPEED + 25;
+        }
 
-    const len =
-        Math.sqrt(
-            dx * dx +
-            dy * dy
-        );
+        const nx = dx / dist;
 
-    if (len > 0) {
+        const ny = dy / dist;
 
-        dx /= len;
-        dy /= len;
-
-        moveWithCollision(
+        tryMove(
             monster,
-            dx * targetSpeed * dt,
-            dy * targetSpeed * dt
+            nx * speed * dt,
+            ny * speed * dt
         );
+
     }
 
-    if (d < 420) {
+    if (dist < 95) {
 
-        heartbeatTimer -= dt;
+        player.health -= 26 * dt;
 
-        if (
-            heartbeatTimer <= 0
-        ) {
+        camera.shake = Math.max(
+            camera.shake,
+            5
+        );
 
-            beep(
-                65,
-                .12,
-                .045,
-                "sine"
-            );
+        monsterRevealTimer = 250;
 
-            heartbeatTimer =
-                Math.max(
-                    .25,
-                    d / 1000
-                );
-        }
     }
 
-    if (d < 80) {
+    if (dist > 900) {
 
-        player.health -=
-            32 * dt;
+        monster.visibleAmount -= dt * 0.5;
 
-        camera.shake =
-            Math.max(
-                camera.shake,
-                8
-            );
+    } else {
 
-        redOverlay.style.background =
-            "rgba(90,0,0,.18)";
+        monster.visibleAmount += dt * 0.8;
 
-        if (
-            player.health <= 0
-        ) {
-
-            player.health = 0;
-
-            endGame();
-        }
     }
 
-    else if (d < 180) {
+    monster.visibleAmount = Math.max(
+        0,
+        Math.min(1, monster.visibleAmount)
+    );
 
-        redOverlay.style.background =
-            "rgba(90,0,0,.08)";
-    }
-
-    else {
-
-        redOverlay.style.background =
-            "rgba(90,0,0,0)";
-    }
 }
 
 
-// ============================================================
-// ITEMS
-// ============================================================
+/* =========================================================
+   ITEMS / INTERACTION
+   ========================================================= */
 
 function updateItems() {
 
+    keyItem.pulse += 0.05;
+
+    const keyDistance = distance(
+        player,
+        keyItem
+    );
+
+    const noteDistance = distance(
+        player,
+        note
+    );
+
+    const exitDistance = distance(
+        player,
+        exitDoor
+    );
+
+    interaction.classList.remove("visible");
+
     if (
-        !keyItem.collected
+        !keyItem.collected &&
+        keyDistance < 60
     ) {
 
-        const d =
-            distance(
-                player.x,
-                player.y,
-                keyItem.x,
-                keyItem.y
-            );
+        interaction.textContent =
+            "[ E ] 열쇠 줍기";
 
-        if (d < 45) {
+        interaction.classList.add("visible");
+
+        if (keys["e"]) {
 
             keyItem.collected = true;
 
-            beep(
-                700,
-                .12,
-                .05,
-                "sine"
+            showMessage(
+                "낡은 열쇠를 발견했다.",
+                2600
             );
+
+            objectiveText.textContent =
+                "현관으로 돌아가라";
+
+            keys["e"] = false;
+
+        }
+
+    } else if (
+        !note.read &&
+        noteDistance < 70
+    ) {
+
+        interaction.textContent =
+            "[ E ] 메모 조사";
+
+        interaction.classList.add("visible");
+
+        if (keys["e"]) {
+
+            note.read = true;
 
             showMessage(
-                "낡은 열쇠를 주웠다.",
-                3
+                "「여기에는 아무도 없어야 한다.」",
+                4000
             );
 
-            objectiveElement.innerText =
-                "열쇠를 사용해 현관문을 열어야 한다.";
-        }
-    }
+            keys["e"] = false;
 
-    if (
-        !note.found
+        }
+
+    } else if (
+        exitDistance < 75
     ) {
 
-        const d =
-            distance(
-                player.x,
-                player.y,
-                note.x,
-                note.y
-            );
+        interaction.textContent =
+            keyItem.collected
+                ? "[ E ] 문 열기"
+                : "열쇠가 필요하다";
 
-        if (d < 55) {
-
-            interactionElement.style.opacity =
-                "1";
-
-            interactionElement.innerText =
-                "E  조사하기";
-
-        }
-
-        else {
-
-            interactionElement.style.opacity =
-                "0";
-        }
-    }
-
-    const doorDistance =
-        distance(
-            player.x,
-            player.y,
-            exitDoor.x,
-            exitDoor.y
-        );
-
-    if (
-        doorDistance < 65
-    ) {
-
-        interactionElement.style.opacity =
-            "1";
+        interaction.classList.add("visible");
 
         if (
+            keys["e"] &&
             keyItem.collected
         ) {
 
-            interactionElement.innerText =
-                "E  문 열기";
+            exitDoor.open = true;
+
+            keys["e"] = false;
+
+            finishGame(true);
+
         }
 
-        else {
-
-            interactionElement.innerText =
-                "E  잠겨 있음";
-        }
     }
 
-    else if (
-        distance(
-            player.x,
-            player.y,
-            note.x,
-            note.y
-        ) >= 55
-    ) {
-
-        interactionElement.style.opacity =
-            "0";
-    }
 }
 
 
-// ============================================================
-// INTERACTION
-// ============================================================
+/* =========================================================
+   FLASHLIGHT
+   ========================================================= */
 
-function interact() {
+function updateFlashlight() {
 
-    if (!gameStarted) {
-        return;
-    }
+    if (keys["f"]) {
 
-    if (gameOver || escaped) {
-        return;
-    }
+        player.flashlight =
+            !player.flashlight;
 
-    const noteDistance =
-        distance(
-            player.x,
-            player.y,
-            note.x,
-            note.y
-        );
-
-    if (
-        noteDistance < 55 &&
-        !note.found
-    ) {
-
-        note.found = true;
+        keys["f"] = false;
 
         showMessage(
-            "『문을 열지 마. 네가 들은 소리는 사람이 아니야.』",
-            6
+            player.flashlight
+                ? "손전등을 켰다."
+                : "손전등을 껐다.",
+            1200
         );
 
-        beep(
-            130,
-            .4,
-            .04,
-            "triangle"
+    }
+
+}
+
+
+/* =========================================================
+   RANDOM EVENTS
+   ========================================================= */
+
+function updateRandomEvents(dt) {
+
+    randomEventTimer += dt;
+
+    if (randomEventTimer > 5) {
+
+        randomEventTimer = 0;
+
+        if (
+            gameTime > 8 &&
+            Math.random() < 0.30
+        ) {
+
+            const events = [
+
+                "어딘가에서 작은 소리가 났다.",
+
+                "바닥이 살짝 삐걱거렸다.",
+
+                "뒤쪽에서 무언가 움직인 것 같다.",
+
+                "집 안이 갑자기 조용해졌다.",
+
+                "멀리서 문이 닫히는 소리가 들렸다."
+
+            ];
+
+            showMessage(
+                events[
+                    Math.floor(
+                        Math.random() * events.length
+                    )
+                ],
+                2200
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   MONSTER ACTIVATION
+   ========================================================= */
+
+function checkMonsterActivation() {
+
+    if (
+        !monster.active &&
+        gameTime > 12
+    ) {
+
+        const d = distance(
+            player,
+            monster
         );
+
+        if (d < 850) {
+
+            monster.active = true;
+
+            showMessage(
+                "……방금 뭔가 움직였다.",
+                3200
+            );
+
+            objectiveText.textContent =
+                keyItem.collected
+                    ? "현관으로 도망쳐라"
+                    : "열쇠를 찾아라";
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW HELPERS
+   ========================================================= */
+
+function px(x, y, size, color) {
+
+    ctx.fillStyle = color;
+
+    ctx.fillRect(
+        Math.round(x),
+        Math.round(y),
+        size,
+        size
+    );
+
+}
+
+
+function pixelSprite(
+    sprite,
+    x,
+    y,
+    scale,
+    palette
+) {
+
+    const rows = sprite.length;
+
+    const cols = sprite[0].length;
+
+    const width = cols * scale;
+
+    const height = rows * scale;
+
+    const startX = Math.round(
+        x - width / 2
+    );
+
+    const startY = Math.round(
+        y - height / 2
+    );
+
+    for (let row = 0; row < rows; row++) {
+
+        const line = sprite[row];
+
+        for (
+            let col = 0;
+            col < cols;
+            col++
+        ) {
+
+            const key = line[col];
+
+            if (
+                key === "." ||
+                !palette[key]
+            ) {
+                continue;
+            }
+
+            px(
+                startX + col * scale,
+                startY + row * scale,
+                scale,
+                palette[key]
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   PLAYER PIXEL SPRITES
+   ========================================================= */
+
+const PLAYER_PALETTE = {
+
+    H: "#17171d",
+    h: "#292932",
+
+    S: "#e6b99a",
+    s: "#d49d7d",
+
+    W: "#e4e4e7",
+
+    U: "#30343e",
+    u: "#20232b",
+
+    T: "#8b3940",
+
+    B: "#171a21",
+
+    L: "#252831",
+
+    K: "#0c0d11",
+
+    P: "#4b342b"
+
+};
+
+
+const PLAYER_FRAMES = [
+
+    [
+        "....HHHH....",
+        "...HHHHHH...",
+        "..HHSSSSHH..",
+        "..HSSSSSSH..",
+        "..HSSSSSSH..",
+        "...HHHHHH...",
+        "....WWWW....",
+        "...WTTTTW...",
+        "...UUUUUU...",
+        "..UUUUUUUU..",
+        "..UULLLLUU..",
+        "..LL....LL..",
+        ".LLK....KLL.",
+        ".LLK....KLL."
+    ],
+
+    [
+        "....HHHH....",
+        "...HHHHHH...",
+        "..HHSSSSHH..",
+        "..HSSSSSSH..",
+        "..HSSSSSSH..",
+        "...HHHHHH...",
+        "....WWWW....",
+        "...WTTTTW...",
+        "...UUUUUU...",
+        "..UUUUUUUU..",
+        "..UULLLLUU..",
+        "...LL..LL...",
+        "..LLK..KLL..",
+        "..LLK..KLL.."
+    ],
+
+    [
+        "....HHHH....",
+        "...HHHHHH...",
+        "..HHSSSSHH..",
+        "..HSSSSSSH..",
+        "..HSSSSSSH..",
+        "...HHHHHH...",
+        "....WWWW....",
+        "...WTTTTW...",
+        "...UUUUUU...",
+        "..UUUUUUUU..",
+        "..UULLLLUU..",
+        ".LL....LL...",
+        ".LLK....KLL.",
+        ".LLK....KLL."
+    ],
+
+    [
+        "....HHHH....",
+        "...HHHHHH...",
+        "..HHSSSSHH..",
+        "..HSSSSSSH..",
+        "..HSSSSSSH..",
+        "...HHHHHH...",
+        "....WWWW....",
+        "...WTTTTW...",
+        "...UUUUUU...",
+        "..UUUUUUUU..",
+        "..UULLLLUU..",
+        "...LL..LL...",
+        "..LLK..KLL..",
+        "..LLK..KLL.."
+    ]
+
+];
+
+
+/* =========================================================
+   MONSTER PIXEL SPRITES
+   ========================================================= */
+
+const MONSTER_PALETTE = {
+
+    H: "#09090c",
+    h: "#15151b",
+
+    F: "#b7b2aa",
+
+    f: "#817d78",
+
+    E: "#9e3238",
+
+    B: "#111117",
+
+    b: "#1b1b22",
+
+    A: "#292931",
+
+    L: "#09090c",
+
+    G: "#3b3b42"
+
+};
+
+
+const MONSTER_FRAMES = [
+
+    [
+        "......HHHH......",
+        "....HHHHHHHH....",
+        "...HHHHHHHHHH...",
+        "..HHHFFFFFFFFHH..",
+        "..HHFFFFFFFFFFHH..",
+        ".HHFFFEFFFFEFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        "..HHFFFFFFFFFFHH..",
+        "..HHHHBBBBHHHHHH..",
+        "...HHHBBBBHHHH....",
+        "...HHHBBBBHHHH....",
+        "..HHHBBBBBBHHH....",
+        ".HHHHHBBBBHHHHH...",
+        "HHHHHHBBBBHHHHHH..",
+        "...HHHBBBBHHH.....",
+        "...HHHLLLLHHH.....",
+        "..HHHHLLLLHHHH....",
+        ".HHHHHLLLLHHHHH...",
+        ".HHHHHLLLLHHHHH..."
+    ],
+
+    [
+        "......HHHH......",
+        "....HHHHHHHH....",
+        "...HHHHHHHHHH...",
+        "..HHHFFFFFFFFHH..",
+        "..HHFFFFFFFFFFHH..",
+        ".HHFFFEFFFFEFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        "..HHFFFFFFFFFFHH..",
+        "..HHHHBBBBHHHHHH..",
+        "...HHHBBBBHHHH....",
+        "..HHHBBBBBBHHH....",
+        ".HHHHBBBBBBHHHH...",
+        "HHHHHHBBBBHHHHHH..",
+        "...HHHBBBBHHH.....",
+        "..HHHLLLLLLHHH....",
+        ".HHHHHLLLLHHHHH...",
+        ".HHHHHLLLLHHHHH...",
+        "..HHHHLLLLHHHH....",
+        "...HHHLLLLHHH....."
+    ],
+
+    [
+        "......HHHH......",
+        "....HHHHHHHH....",
+        "...HHHHHHHHHH...",
+        "..HHHFFFFFFFFHH..",
+        "..HHFFFFFFFFFFHH..",
+        ".HHFFFEFFFFEFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        ".HHFFFFFFFFFFFFHH.",
+        "..HHFFFFFFFFFFHH..",
+        "..HHHHBBBBHHHHHH..",
+        "...HHHBBBBHHHH....",
+        "...HHHBBBBHHHH....",
+        "..HHHBBBBBBHHH....",
+        ".HHHHHBBBBHHHHH...",
+        "HHHHHHBBBBHHHHHH..",
+        "..HHHLLLLLLHHH....",
+        ".HHHHHLLLLHHHHH...",
+        ".HHHHHLLLLHHHHH...",
+        "..HHHHLLLLHHHH....",
+        "...HHHLLLLHHH....."
+    ]
+
+];
+
+
+/* =========================================================
+   DRAW PLAYER
+   ========================================================= */
+
+function drawPlayer() {
+
+    const screenX =
+        player.x - camera.x;
+
+    const screenY =
+        player.y - camera.y + player.bob;
+
+    const moving =
+        player.moving;
+
+    let frameIndex = 0;
+
+    if (moving) {
+
+        frameIndex =
+            Math.floor(
+                player.animTime
+            ) % PLAYER_FRAMES.length;
+
+    }
+
+    const sprite =
+        PLAYER_FRAMES[frameIndex];
+
+    /*
+       아주 작은 픽셀 학생 캐릭터.
+       실제 충돌 반경은 14px이지만
+       화면에서는 약 36px 정도로 보인다.
+    */
+
+    const scale = 3;
+
+    /*
+       바닥 그림자도 거대한 원 대신
+       작은 픽셀 타원처럼 표현한다.
+    */
+
+    ctx.save();
+
+    ctx.fillStyle =
+        "rgba(0,0,0,0.35)";
+
+    ctx.fillRect(
+        Math.round(screenX - 14),
+        Math.round(screenY + 19),
+        28,
+        4
+    );
+
+    pixelSprite(
+        sprite,
+        screenX,
+        screenY,
+        scale,
+        PLAYER_PALETTE
+    );
+
+    /*
+       손전등을 들고 있는 느낌의 작은 픽셀
+    */
+
+    if (player.flashlight) {
+
+        const handX =
+            screenX +
+            (player.lastDX >= 0 ? 17 : -20);
+
+        const handY =
+            screenY + 5;
+
+        px(
+            handX,
+            handY,
+            3,
+            "#b8b8bd"
+        );
+
+    }
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW MONSTER
+   ========================================================= */
+
+function drawMonster() {
+
+    if (!monster.active) {
+        return;
+    }
+
+    const screenX =
+        monster.x - camera.x;
+
+    const screenY =
+        monster.y - camera.y;
+
+    const frameIndex =
+        Math.floor(
+            monster.animTime
+        ) % MONSTER_FRAMES.length;
+
+    const sprite =
+        MONSTER_FRAMES[frameIndex];
+
+    const scale = 3;
+
+    ctx.save();
+
+    /*
+       몬스터 그림자
+    */
+
+    ctx.fillStyle =
+        "rgba(0,0,0,0.55)";
+
+    ctx.fillRect(
+        Math.round(screenX - 23),
+        Math.round(screenY + 29),
+        46,
+        5
+    );
+
+    /*
+       아주 약한 주변 어둠
+    */
+
+    const glow =
+        ctx.createRadialGradient(
+            screenX,
+            screenY,
+            5,
+            screenX,
+            screenY,
+            75
+        );
+
+    glow.addColorStop(
+        0,
+        "rgba(80,20,25,0.16)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+    ctx.fillStyle = glow;
+
+    ctx.fillRect(
+        screenX - 75,
+        screenY - 75,
+        150,
+        150
+    );
+
+    pixelSprite(
+        sprite,
+        screenX,
+        screenY,
+        scale,
+        MONSTER_PALETTE
+    );
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   FLOOR
+   ========================================================= */
+
+function drawFloor() {
+
+    const startX =
+        Math.floor(camera.x / TILE) - 1;
+
+    const endX =
+        Math.ceil(
+            (camera.x + W) / TILE
+        ) + 1;
+
+    const startY =
+        Math.floor(camera.y / TILE) - 1;
+
+    const endY =
+        Math.ceil(
+            (camera.y + H) / TILE
+        ) + 1;
+
+    for (
+        let ty = startY;
+        ty <= endY;
+        ty++
+    ) {
+
+        for (
+            let tx = startX;
+            tx <= endX;
+            tx++
+        ) {
+
+            if (
+                ty < 0 ||
+                ty >= MAP.length ||
+                tx < 0 ||
+                tx >= MAP[ty].length
+            ) {
+                continue;
+            }
+
+            const sx =
+                tx * TILE - camera.x;
+
+            const sy =
+                ty * TILE - camera.y;
+
+            if (isWallAt(tx, ty)) {
+
+                ctx.fillStyle = "#15151a";
+
+                ctx.fillRect(
+                    sx,
+                    sy,
+                    TILE,
+                    TILE
+                );
+
+                /*
+                   벽 위쪽 픽셀 하이라이트
+                */
+
+                ctx.fillStyle =
+                    "#202027";
+
+                ctx.fillRect(
+                    sx,
+                    sy,
+                    TILE,
+                    2
+                );
+
+                /*
+                   벽 아래쪽 어두운 픽셀
+                */
+
+                ctx.fillStyle =
+                    "#0b0b0e";
+
+                ctx.fillRect(
+                    sx,
+                    sy + TILE - 4,
+                    TILE,
+                    4
+                );
+
+            } else {
+
+                ctx.fillStyle = "#29292d";
+
+                ctx.fillRect(
+                    sx,
+                    sy,
+                    TILE,
+                    TILE
+                );
+
+                /*
+                   바닥 타일의 미세한 픽셀 패턴
+                */
+
+                ctx.fillStyle =
+                    "rgba(255,255,255,0.018)";
+
+                const pattern =
+                    (tx * 17 + ty * 23) % 4;
+
+                if (pattern === 0) {
+
+                    ctx.fillRect(
+                        sx + 12,
+                        sy + 17,
+                        3,
+                        3
+                    );
+
+                    ctx.fillRect(
+                        sx + 43,
+                        sy + 46,
+                        2,
+                        2
+                    );
+
+                } else if (pattern === 1) {
+
+                    ctx.fillRect(
+                        sx + 28,
+                        sy + 12,
+                        2,
+                        2
+                    );
+
+                    ctx.fillRect(
+                        sx + 49,
+                        sy + 31,
+                        3,
+                        2
+                    );
+
+                }
+
+                ctx.strokeStyle =
+                    "rgba(0,0,0,0.08)";
+
+                ctx.strokeRect(
+                    sx,
+                    sy,
+                    TILE,
+                    TILE
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW KEY
+   ========================================================= */
+
+function drawKey() {
+
+    if (keyItem.collected) {
+        return;
+    }
+
+    const sx =
+        keyItem.x - camera.x;
+
+    const sy =
+        keyItem.y - camera.y;
+
+    const pulse =
+        Math.sin(
+            keyItem.pulse
+        ) * 2;
+
+    ctx.save();
+
+    ctx.fillStyle =
+        "rgba(190,190,170,0.07)";
+
+    ctx.fillRect(
+        sx - 18 - pulse,
+        sy - 18 - pulse,
+        36 + pulse * 2,
+        36 + pulse * 2
+    );
+
+    /*
+       픽셀 열쇠
+    */
+
+    px(
+        sx - 9,
+        sy - 3,
+        6,
+        "#b3b09b"
+    );
+
+    px(
+        sx - 3,
+        sy - 3,
+        6,
+        "#b3b09b"
+    );
+
+    px(
+        sx + 3,
+        sy - 3,
+        6,
+        "#b3b09b"
+    );
+
+    px(
+        sx + 7,
+        sy - 9,
+        5,
+        "#b3b09b"
+    );
+
+    px(
+        sx + 7,
+        sy + 3,
+        5,
+        "#b3b09b"
+    );
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW NOTE
+   ========================================================= */
+
+function drawNote() {
+
+    if (note.read) {
+        return;
+    }
+
+    const sx =
+        note.x - camera.x;
+
+    const sy =
+        note.y - camera.y;
+
+    ctx.save();
+
+    /*
+       종이
+    */
+
+    ctx.fillStyle =
+        "#b7b2a4";
+
+    ctx.fillRect(
+        sx - 10,
+        sy - 13,
+        20,
+        26
+    );
+
+    /*
+       종이 픽셀
+    */
+
+    ctx.fillStyle =
+        "#6c6961";
+
+    ctx.fillRect(
+        sx - 6,
+        sy - 7,
+        12,
+        2
+    );
+
+    ctx.fillRect(
+        sx - 6,
+        sy - 2,
+        10,
+        2
+    );
+
+    ctx.fillRect(
+        sx - 6,
+        sy + 3,
+        12,
+        2
+    );
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW EXIT
+   ========================================================= */
+
+function drawExit() {
+
+    const sx =
+        exitDoor.x - camera.x;
+
+    const sy =
+        exitDoor.y - camera.y;
+
+    ctx.save();
+
+    /*
+       문틀
+    */
+
+    ctx.fillStyle =
+        "#09090c";
+
+    ctx.fillRect(
+        sx - 25,
+        sy - 37,
+        50,
+        74
+    );
+
+    /*
+       문
+    */
+
+    ctx.fillStyle =
+        exitDoor.open
+            ? "#35353b"
+            : "#1c1c21";
+
+    ctx.fillRect(
+        sx - 20,
+        sy - 32,
+        40,
+        64
+    );
+
+    /*
+       문 손잡이
+    */
+
+    px(
+        sx + 10,
+        sy - 1,
+        4,
+        "#8a8780"
+    );
+
+    /*
+       출구 표식
+    */
+
+    if (!exitDoor.open) {
+
+        ctx.fillStyle =
+            "rgba(170,170,180,0.6)";
+
+        ctx.fillRect(
+            sx - 7,
+            sy - 20,
+            14,
+            2
+        );
+
+        ctx.fillRect(
+            sx - 7,
+            sy - 16,
+            14,
+            2
+        );
+
+    }
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW DARKNESS
+   ========================================================= */
+
+function drawDarkness() {
+
+    const pxScreen =
+        player.x - camera.x;
+
+    const pyScreen =
+        player.y - camera.y;
+
+    /*
+       전체 어둠
+    */
+
+    ctx.save();
+
+    ctx.fillStyle =
+        "rgba(0,0,0,0.74)";
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /*
+       손전등을 껐으면 조금 더 어둡게
+    */
+
+    if (!player.flashlight) {
+
+        ctx.fillStyle =
+            "rgba(0,0,0,0.17)";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+        ctx.restore();
 
         return;
     }
 
-    const doorDistance =
-        distance(
-            player.x,
-            player.y,
-            exitDoor.x,
-            exitDoor.y
+    /*
+       손전등 빛
+    */
+
+    const lightRadius =
+        player.sprinting
+            ? 225
+            : 195;
+
+    const gradient =
+        ctx.createRadialGradient(
+            pxScreen,
+            pyScreen,
+            15,
+            pxScreen,
+            pyScreen,
+            lightRadius
         );
 
-    if (
-        doorDistance < 65
-    ) {
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0.02)"
+    );
 
-        if (
-            !keyItem.collected
-        ) {
+    gradient.addColorStop(
+        0.25,
+        "rgba(0,0,0,0.05)"
+    );
 
-            showMessage(
-                "문은 잠겨 있다.",
-                2
-            );
+    gradient.addColorStop(
+        0.55,
+        "rgba(0,0,0,0.30)"
+    );
 
-            beep(
-                80,
-                .12,
-                .04,
-                "square"
-            );
+    gradient.addColorStop(
+        0.80,
+        "rgba(0,0,0,0.70)"
+    );
 
-            return;
-        }
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,0.96)"
+    );
 
-        exitDoor.open = true;
+    ctx.globalCompositeOperation =
+        "destination-out";
 
-        escaped = true;
+    ctx.fillStyle =
+        gradient;
 
-        escapeScreen.style.display =
-            "flex";
+    ctx.beginPath();
 
-        beep(
-            400,
-            .4,
-            .06,
-            "sine"
-        );
-    }
-}
+    ctx.arc(
+        pxScreen,
+        pyScreen,
+        lightRadius,
+        0,
+        Math.PI * 2
+    );
 
+    ctx.fill();
 
-// ============================================================
-// RANDOM EVENTS
-// ============================================================
+    /*
+       손전등의 중심은 완전히 밝게
+    */
 
-function randomEvent() {
-
-    const events = [
-
-        function() {
-
-            showMessage(
-                "위층에서 무언가 떨어지는 소리가 났다.",
-                3
-            );
-
-            beep(
-                70,
-                .3,
-                .05,
-                "square"
-            );
-        },
-
-        function() {
-
-            showMessage(
-                "누군가 방금 문을 닫은 것 같다.",
-                3
-            );
-
-            beep(
-                90,
-                .2,
-                .05,
-                "triangle"
-            );
-        },
-
-        function() {
-
-            showMessage(
-                "복도 끝에서 무언가 움직였다.",
-                3
-            );
-
-            monster.active = true;
-        },
-
-        function() {
-
-            showMessage(
-                "잠깐... 아무 소리도 들리지 않는다.",
-                3
-            );
-        },
-
-        function() {
-
-            showMessage(
-                "벽 너머에서 희미한 긁는 소리가 들린다.",
-                4
-            );
-
-            beep(
-                45,
-                .5,
-                .03,
-                "sawtooth"
-            );
-        }
-
-    ];
-
-    const event =
-        events[
-            Math.floor(
-                Math.random() *
-                events.length
-            )
-        ];
-
-    event();
-
-    randomEventTimer =
-        8 +
-        Math.random() * 12;
-}
-
-
-// ============================================================
-// CAMERA
-// ============================================================
-
-function updateCamera(dt) {
-
-    const targetX =
-        player.x - W / 2;
-
-    const targetY =
-        player.y - H / 2;
-
-    camera.x +=
-        (targetX - camera.x) *
-        Math.min(
+    const center =
+        ctx.createRadialGradient(
+            pxScreen,
+            pyScreen,
             1,
-            dt * 7
+            pxScreen,
+            pyScreen,
+            65
         );
 
-    camera.y +=
-        (targetY - camera.y) *
-        Math.min(
-            1,
-            dt * 7
-        );
+    center.addColorStop(
+        0,
+        "rgba(0,0,0,0.90)"
+    );
 
-    camera.x =
-        Math.max(
-            0,
-            Math.min(
-                WORLD_W - W,
-                camera.x
-            )
-        );
+    center.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
 
-    camera.y =
-        Math.max(
-            0,
-            Math.min(
-                WORLD_H - H,
-                camera.y
-            )
-        );
+    ctx.fillStyle = center;
 
-    if (
-        camera.shake > 0
-    ) {
+    ctx.beginPath();
 
-        camera.shake *=
-            Math.pow(
-                .05,
-                dt
-            );
+    ctx.arc(
+        pxScreen,
+        pyScreen,
+        65,
+        0,
+        Math.PI * 2
+    );
 
-        if (
-            camera.shake < .1
-        ) {
-            camera.shake = 0;
-        }
-    }
+    ctx.fill();
+
+    ctx.restore();
+
 }
 
 
-// ============================================================
-// DRAW WORLD
-// ============================================================
+/* =========================================================
+   DRAW SCREEN FLASH
+   ========================================================= */
+
+function drawFlash() {
+
+    if (flashTimer <= 0) {
+        return;
+    }
+
+    ctx.save();
+
+    ctx.fillStyle =
+        "rgba(255,255,255," +
+        Math.min(
+            0.18,
+            flashTimer / 1000
+        ) +
+        ")";
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW PIXEL NOISE
+   ========================================================= */
+
+function drawNoise() {
+
+    ctx.save();
+
+    ctx.globalAlpha = 0.035;
+
+    for (let i = 0; i < 120; i++) {
+
+        const x =
+            Math.random() * W;
+
+        const y =
+            Math.random() * H;
+
+        const size =
+            Math.random() < 0.8
+                ? 1
+                : 2;
+
+        ctx.fillStyle =
+            Math.random() < 0.5
+                ? "#ffffff"
+                : "#000000";
+
+        ctx.fillRect(
+            x,
+            y,
+            size,
+            size
+        );
+
+    }
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW WORLD
+   ========================================================= */
 
 function drawWorld() {
 
@@ -1522,564 +2448,8 @@ function drawWorld() {
         H
     );
 
-    let shakeX = 0;
-    let shakeY = 0;
-
-    if (
-        camera.shake > 0
-    ) {
-
-        shakeX =
-            (Math.random() - .5) *
-            camera.shake;
-
-        shakeY =
-            (Math.random() - .5) *
-            camera.shake;
-    }
-
-    ctx.save();
-
-    ctx.translate(
-        -camera.x + shakeX,
-        -camera.y + shakeY
-    );
-
-    drawFloor();
-
-    drawObjects();
-
-    drawPlayer();
-
-    drawMonster();
-
-    ctx.restore();
-
-    drawDarkness();
-
-    drawNoise();
-}
-
-
-// ============================================================
-// FLOOR
-// ============================================================
-
-function drawFloor() {
-
-    const startX =
-        Math.floor(
-            camera.x / TILE
-        ) - 1;
-
-    const endX =
-        Math.ceil(
-            (camera.x + W) / TILE
-        ) + 1;
-
-    const startY =
-        Math.floor(
-            camera.y / TILE
-        ) - 1;
-
-    const endY =
-        Math.ceil(
-            (camera.y + H) / TILE
-        ) + 1;
-
-    for (
-        let y = startY;
-        y <= endY;
-        y++
-    ) {
-
-        for (
-            let x = startX;
-            x <= endX;
-            x++
-        ) {
-
-            if (
-                x < 0 ||
-                y < 0 ||
-                x >= MAP_W ||
-                y >= MAP_H
-            ) {
-                continue;
-            }
-
-            const px =
-                x * TILE;
-
-            const py =
-                y * TILE;
-
-            if (
-                MAP[y][x] === "#"
-            ) {
-
-                ctx.fillStyle =
-                    "#151515";
-
-                ctx.fillRect(
-                    px,
-                    py,
-                    TILE,
-                    TILE
-                );
-
-                ctx.strokeStyle =
-                    "#202020";
-
-                ctx.strokeRect(
-                    px + .5,
-                    py + .5,
-                    TILE - 1,
-                    TILE - 1
-                );
-
-            }
-
-            else {
-
-                ctx.fillStyle =
-                    "#303030";
-
-                ctx.fillRect(
-                    px,
-                    py,
-                    TILE,
-                    TILE
-                );
-
-                ctx.strokeStyle =
-                    "#353535";
-
-                ctx.strokeRect(
-                    px + .5,
-                    py + .5,
-                    TILE - 1,
-                    TILE - 1
-                );
-
-                // floor details
-
-                if (
-                    (x * 17 + y * 31) % 9 === 0
-                ) {
-
-                    ctx.fillStyle =
-                        "#282828";
-
-                    ctx.fillRect(
-                        px + 12,
-                        py + 21,
-                        2,
-                        2
-                    );
-                }
-            }
-        }
-    }
-}
-
-
-// ============================================================
-// OBJECTS
-// ============================================================
-
-function drawObjects() {
-
-    // key
-
-    if (
-        !keyItem.collected
-    ) {
-
-        ctx.save();
-
-        ctx.translate(
-            keyItem.x,
-            keyItem.y
-        );
-
-        ctx.rotate(
-            Math.sin(
-                timePlayed * 3
-            ) * .1
-        );
-
-        ctx.strokeStyle =
-            "#b7a65a";
-
-        ctx.lineWidth = 4;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            -8,
-            -3,
-            8,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.stroke();
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            0,
-            -3
-        );
-
-        ctx.lineTo(
-            22,
-            -3
-        );
-
-        ctx.lineTo(
-            22,
-            4
-        );
-
-        ctx.lineTo(
-            15,
-            4
-        );
-
-        ctx.stroke();
-
-        ctx.restore();
-    }
-
-
-    // note
-
-    if (
-        !note.found
-    ) {
-
-        ctx.save();
-
-        ctx.translate(
-            note.x,
-            note.y
-        );
-
-        ctx.fillStyle =
-            "#b7b2a3";
-
-        ctx.fillRect(
-            -16,
-            -20,
-            32,
-            40
-        );
-
-        ctx.strokeStyle =
-            "#666";
-
-        ctx.strokeRect(
-            -16,
-            -20,
-            32,
-            40
-        );
-
-        ctx.strokeStyle =
-            "#777";
-
-        ctx.lineWidth = 2;
-
-        for (
-            let i = -8;
-            i <= 10;
-            i += 8
-        ) {
-
-            ctx.beginPath();
-
-            ctx.moveTo(
-                -10,
-                i
-            );
-
-            ctx.lineTo(
-                10,
-                i
-            );
-
-            ctx.stroke();
-        }
-
-        ctx.restore();
-    }
-
-
-    // exit door
-
-    ctx.save();
-
-    ctx.translate(
-        exitDoor.x,
-        exitDoor.y
-    );
-
-    if (
-        exitDoor.open
-    ) {
-
-        ctx.fillStyle =
-            "#18251b";
-
-    }
-
-    else {
-
-        ctx.fillStyle =
-            "#253027";
-    }
-
-    ctx.fillRect(
-        -25,
-        -38,
-        50,
-        76
-    );
-
-    ctx.strokeStyle =
-        "#617265";
-
-    ctx.lineWidth = 3;
-
-    ctx.strokeRect(
-        -25,
-        -38,
-        50,
-        76
-    );
-
     ctx.fillStyle =
-        "#888";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        15,
-        0,
-        4,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-}
-
-
-// ============================================================
-// PLAYER
-// ============================================================
-
-function drawPlayer() {
-
-    ctx.save();
-
-    ctx.translate(
-        player.x,
-        player.y
-    );
-
-    ctx.shadowBlur = 15;
-    ctx.shadowColor =
-        "rgba(255,255,255,.15)";
-
-    ctx.fillStyle =
-        "#bdbdbd";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        player.radius,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle =
-        "#202020";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        -3,
-        6,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-}
-
-
-// ============================================================
-// MONSTER DRAW
-// ============================================================
-
-function drawMonster() {
-
-    const d =
-        distance(
-            monster.x,
-            monster.y,
-            player.x,
-            player.y
-        );
-
-    if (
-        d > 850
-    ) {
-        return;
-    }
-
-    ctx.save();
-
-    ctx.translate(
-        monster.x,
-        monster.y
-    );
-
-    const pulse =
-        Math.sin(
-            timePlayed * 5
-        ) * 2;
-
-    ctx.fillStyle =
-        "#171717";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        0,
-        0,
-        monster.radius + pulse,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    ctx.strokeStyle =
-        "#441b1b";
-
-    ctx.lineWidth = 3;
-
-    ctx.stroke();
-
-    // eyes
-
-    if (
-        d < 600
-    ) {
-
-        ctx.fillStyle =
-            "#b14b4b";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            -7,
-            -4,
-            3,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.arc(
-            7,
-            -4,
-            3,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-    }
-
-    ctx.restore();
-}
-
-
-// ============================================================
-// DARKNESS
-// ============================================================
-
-function drawDarkness() {
-
-    const px =
-        player.x -
-        camera.x;
-
-    const py =
-        player.y -
-        camera.y;
-
-    let radius =
-        player.flashlight
-            ? 270
-            : 120;
-
-    if (
-        flicker > 0
-    ) {
-
-        radius *=
-            .65 +
-            Math.random() * .35;
-    }
-
-    const gradient =
-        ctx.createRadialGradient(
-            px,
-            py,
-            radius * .15,
-            px,
-            py,
-            radius
-        );
-
-    gradient.addColorStop(
-        0,
-        "rgba(0,0,0,0)"
-    );
-
-    gradient.addColorStop(
-        .45,
-        "rgba(0,0,0,.08)"
-    );
-
-    gradient.addColorStop(
-        .72,
-        "rgba(0,0,0,.55)"
-    );
-
-    gradient.addColorStop(
-        1,
-        "rgba(0,0,0,.96)"
-    );
-
-    ctx.fillStyle =
-        gradient;
+        "#07070a";
 
     ctx.fillRect(
         0,
@@ -2088,368 +2458,452 @@ function drawDarkness() {
         H
     );
 
+    updateCamera();
 
-    // flashlight cone
+    const shakeX =
+        camera.shake > 0
+            ? (Math.random() - 0.5) *
+              camera.shake
+            : 0;
+
+    const shakeY =
+        camera.shake > 0
+            ? (Math.random() - 0.5) *
+              camera.shake
+            : 0;
+
+    ctx.save();
+
+    ctx.translate(
+        shakeX,
+        shakeY
+    );
+
+    drawFloor();
+
+    drawExit();
+
+    drawKey();
+
+    drawNote();
+
+    drawMonster();
+
+    drawPlayer();
+
+    ctx.restore();
+
+    drawDarkness();
+
+    drawFlash();
+
+    drawNoise();
+
+}
+
+
+/* =========================================================
+   UI UPDATE
+   ========================================================= */
+
+function updateUI() {
+
+    healthBar.style.width =
+        Math.max(
+            0,
+            player.health
+        ) + "%";
+
+    staminaBar.style.width =
+        player.stamina + "%";
+
+    if (keyItem.collected) {
+
+        objectiveText.textContent =
+            "현관으로 돌아가라";
+
+    } else {
+
+        objectiveText.textContent =
+            "집 안을 조사하라";
+
+    }
+
+}
+
+
+/* =========================================================
+   GAME OVER
+   ========================================================= */
+
+function checkGameOver() {
 
     if (
-        player.flashlight
+        player.health <= 0 &&
+        !gameEnded
     ) {
 
-        const cone =
-            ctx.createRadialGradient(
-                px,
-                py,
-                20,
-                px,
-                py,
-                430
+        finishGame(false);
+
+    }
+
+}
+
+
+/* =========================================================
+   END GAME
+   ========================================================= */
+
+function finishGame(success) {
+
+    gameEnded = true;
+
+    escaped = success;
+
+    if (success) {
+
+        endTitle.textContent =
+            "YOU ESCAPED";
+
+        endText.innerHTML =
+            "문이 열렸다.<br>" +
+            "그리고 뒤를 돌아보지 않았다.";
+
+    } else {
+
+        endTitle.textContent =
+            "YOU WERE TOO LATE";
+
+        endText.innerHTML =
+            "집 안에는 아무도 없었다.<br>" +
+            "적어도 처음에는 그랬다.";
+
+    }
+
+    setTimeout(
+        function() {
+
+            endScreen.classList.add(
+                "visible"
             );
 
-        cone.addColorStop(
-            0,
-            "rgba(255,255,255,.08)"
-        );
-
-        cone.addColorStop(
-            .6,
-            "rgba(255,255,255,.015)"
-        );
-
-        cone.addColorStop(
-            1,
-            "rgba(255,255,255,0)"
-        );
-
-        ctx.fillStyle =
-            cone;
-
-        ctx.fillRect(
-            0,
-            0,
-            W,
-            H
-        );
-    }
-}
-
-
-// ============================================================
-// NOISE
-// ============================================================
-
-function drawNoise() {
-
-    noiseElement.style.opacity =
-        String(
-            .025 +
-            Math.random() * .025
-        );
-}
-
-
-// ============================================================
-// GAME END
-// ============================================================
-
-function endGame() {
-
-    if (gameOver) {
-        return;
-    }
-
-    gameOver = true;
-
-    gameOverScreen.style.display =
-        "flex";
-
-    beep(
-        45,
-        1,
-        .08,
-        "sawtooth"
+        },
+        800
     );
+
 }
 
 
-// ============================================================
-// RESET
-// ============================================================
+/* =========================================================
+   RESET GAME
+   ========================================================= */
 
 function resetGame() {
 
-    gameStarted = true;
-    gameOver = false;
-    escaped = false;
-    paused = false;
+    player.x =
+        6 * TILE + TILE / 2;
 
-    player.x = 6 * TILE;
-    player.y = 6 * TILE;
+    player.y =
+        6 * TILE + TILE / 2;
+
     player.health = 100;
+
     player.stamina = 100;
+
     player.flashlight = true;
 
-    monster.x = 43 * TILE;
-    monster.y = 43 * TILE;
+    player.moving = false;
+
+    player.sprinting = false;
+
+    player.lastDX = 0;
+
+    player.lastDY = 1;
+
+    player.animTime = 0;
+
+    player.bob = 0;
+
+    monster.x =
+        43 * TILE + TILE / 2;
+
+    monster.y =
+        43 * TILE + TILE / 2;
+
     monster.active = false;
-    monster.anger = 0;
+
+    monster.animTime = 0;
+
+    monster.visibleAmount = 0;
 
     keyItem.collected = false;
-    note.found = false;
+
+    keyItem.pulse = 0;
+
+    note.read = false;
 
     exitDoor.open = false;
 
     camera.x = 0;
+
     camera.y = 0;
+
     camera.shake = 0;
 
-    timePlayed = 0;
-    randomEventTimer = 8;
+    gameTime = 0;
 
-    gameOverScreen.style.display =
-        "none";
+    messageTimer = 0;
 
-    escapeScreen.style.display =
-        "none";
+    randomEventTimer = 0;
 
-    pauseScreen.style.display =
-        "none";
+    monsterRevealTimer = 0;
 
-    interactionElement.style.opacity =
-        "0";
+    flashTimer = 0;
 
-    objectiveElement.innerText =
-        "집 밖으로 나가야 한다.";
+    gameEnded = false;
 
-    showMessage(
-        "방 안이다. 밖으로 나갈 방법을 찾아야 한다.",
-        4
+    escaped = false;
+
+    objectiveText.textContent =
+        "집 안을 조사하라";
+
+    messageBox.classList.remove(
+        "visible"
     );
+
+    endScreen.classList.remove(
+        "visible"
+    );
+
 }
 
 
-// ============================================================
-// KEYBOARD
-// ============================================================
+/* =========================================================
+   START
+   ========================================================= */
 
-window.addEventListener(
-    "keydown",
-    function(e) {
+startButton.addEventListener(
+    "click",
+    function() {
 
-        const key =
-            e.key.toLowerCase();
+        resetGame();
 
-        if (
-            [
-                "w",
-                "a",
-                "s",
-                "d",
-                "shift",
-                "f",
-                "e",
-                "arrowup",
-                "arrowdown",
-                "arrowleft",
-                "arrowright",
-                " "
-            ].includes(key)
-        ) {
+        gameStarted = true;
 
-            e.preventDefault();
-        }
-
-        keys[key] = true;
-
-        if (
-            key === "e"
-        ) {
-
-            interact();
-        }
-
-        if (
-            key === "f"
-        ) {
-
-            if (gameStarted) {
-
-                player.flashlight =
-                    !player.flashlight;
-
-                beep(
-                    player.flashlight
-                        ? 500
-                        : 200,
-                    .08,
-                    .025,
-                    "square"
-                );
-            }
-        }
-
-        if (
-            key === " "
-        ) {
-
-            paused =
-                !paused;
-
-            pauseScreen.style.display =
-                paused
-                    ? "flex"
-                    : "none";
-        }
-    }
-);
-
-window.addEventListener(
-    "keyup",
-    function(e) {
-
-        keys[
-            e.key.toLowerCase()
-        ] = false;
-    }
-);
-
-
-// ============================================================
-// BUTTONS
-// ============================================================
-
-document
-    .getElementById("startButton")
-    .addEventListener(
-        "click",
-        function() {
-
-            initAudio();
-
-            startScreen.style.display =
-                "none";
-
-            resetGame();
-
-            canvas.focus();
-        }
-    );
-
-document
-    .getElementById("restartButton")
-    .addEventListener(
-        "click",
-        function() {
-
-            initAudio();
-
-            resetGame();
-        }
-    );
-
-document
-    .getElementById("escapeRestartButton")
-    .addEventListener(
-        "click",
-        function() {
-
-            initAudio();
-
-            resetGame();
-        }
-    );
-
-
-// ============================================================
-// GAME LOOP
-// ============================================================
-
-function update(dt) {
-
-    if (
-        !gameStarted ||
-        gameOver ||
-        escaped ||
-        paused
-    ) {
-        return;
-    }
-
-    timePlayed += dt;
-
-    updatePlayer(dt);
-
-    updateMonster(dt);
-
-    updateItems();
-
-    updateCamera(dt);
-
-    updateMessage(dt);
-
-    randomEventTimer -= dt;
-
-    if (
-        randomEventTimer <= 0
-    ) {
-
-        randomEvent();
-
-        randomEventTimer =
-            10 +
-            Math.random() * 15;
-    }
-
-    flicker -= dt;
-
-    if (
-        Math.random() < .002
-    ) {
-
-        flicker = .15;
-    }
-
-    healthElement.style.width =
-        player.health + "%";
-
-    if (
-        player.health < 35
-    ) {
-
-        healthElement.style.background =
-            "#712525";
-
-    }
-
-    else {
-
-        healthElement.style.background =
-            "#777";
-    }
-}
-
-
-// ============================================================
-// MAIN LOOP
-// ============================================================
-
-function loop(now) {
-
-    const dt =
-        Math.min(
-            .05,
-            (now - lastTime) / 1000
+        startScreen.classList.add(
+            "hidden"
         );
 
-    lastTime = now;
+        hud.classList.add(
+            "visible"
+        );
 
-    update(dt);
+        objective.classList.add(
+            "visible"
+        );
+
+        showMessage(
+            "집 안을 조사하라.",
+            3000
+        );
+
+        lastTime =
+            performance.now();
+
+    }
+);
+
+
+/* =========================================================
+   RESTART
+   ========================================================= */
+
+restartButton.addEventListener(
+    "click",
+    function() {
+
+        resetGame();
+
+        endScreen.classList.remove(
+            "visible"
+        );
+
+        gameStarted = true;
+
+        hud.classList.add(
+            "visible"
+        );
+
+        objective.classList.add(
+            "visible"
+        );
+
+        showMessage(
+            "다시 시작했다.",
+            2000
+        );
+
+        lastTime =
+            performance.now();
+
+    }
+);
+
+
+/* =========================================================
+   MAIN LOOP
+   ========================================================= */
+
+function loop(timestamp) {
+
+    if (!lastTime) {
+        lastTime = timestamp;
+    }
+
+    let dt =
+        (timestamp - lastTime) / 1000;
+
+    lastTime = timestamp;
+
+    dt = Math.min(
+        dt,
+        0.033
+    );
+
+    if (gameStarted && !gameEnded) {
+
+        gameTime += dt;
+
+        updatePlayer(dt);
+
+        updateMonster(dt);
+
+        updateItems();
+
+        updateFlashlight();
+
+        updateRandomEvents(dt);
+
+        checkMonsterActivation();
+
+        updateMessage(dt);
+
+        updateUI();
+
+        checkGameOver();
+
+        if (camera.shake > 0) {
+
+            camera.shake -=
+                dt * 15;
+
+            if (camera.shake < 0) {
+                camera.shake = 0;
+            }
+
+        }
+
+        if (flashTimer > 0) {
+
+            flashTimer -=
+                dt * 1000;
+
+        }
+
+    }
 
     drawWorld();
 
     requestAnimationFrame(loop);
+
 }
 
 requestAnimationFrame(loop);
+
+
+/* =========================================================
+   INITIAL DRAW
+   ========================================================= */
+
+drawWorld();
+
+
+/* =========================================================
+   EXTRA AMBIENCE
+   ========================================================= */
+
+let ambientPulse = 0;
+
+function ambienceLoop() {
+
+    ambientPulse += 0.02;
+
+    if (
+        gameStarted &&
+        !gameEnded &&
+        monster.active
+    ) {
+
+        const d =
+            distance(
+                player,
+                monster
+            );
+
+        if (
+            d < 500 &&
+            Math.random() < 0.002
+        ) {
+
+            flashTimer = 120;
+
+        }
+
+    }
+
+    requestAnimationFrame(
+        ambienceLoop
+    );
+
+}
+
+ambienceLoop();
+
+
+/* =========================================================
+   PREVENT CONTEXT MENU
+   ========================================================= */
+
+window.addEventListener(
+    "contextmenu",
+    function(e) {
+        e.preventDefault();
+    }
+);
+
+
+/* =========================================================
+   VISIBILITY
+   ========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            document.hidden
+        ) {
+
+            for (
+                const key in keys
+            ) {
+                keys[key] = false;
+            }
+
+        }
+
+    }
+);
 
 </script>
 
